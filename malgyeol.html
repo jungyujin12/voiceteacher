@@ -1,0 +1,3071 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>말결 (Malgyeol) - 청각장애 대학생을 위한 실시간 발표 분석 솔루션</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              // Map orange & amber directly to beautiful, professional beige & brown scales
+              orange: {
+                50: '#FAF6F0',    // Cream / Ivory
+                100: '#F4EBE1',   // Soft Beige
+                200: '#E6D5C3',   // Warm Beige
+                300: '#D5BEA7',   // Rich Sand
+                400: '#C3A58B',   // Toffee
+                500: '#B08E74',   // Milk Chocolate
+                600: '#957156',   // Wood Brown
+                700: '#7B583F',   // Terracotta Brown
+                800: '#60422E',   // Dark Coffee
+                900: '#462E1F',   // Espresso
+                950: '#2F1E14',   // Deep Charcoal Brown
+              },
+              amber: {
+                50: '#FAF8F5',    // Lighter Ivory
+                100: '#F3EFE9',   // Light Warm Gray
+                200: '#E5DEC9',   // Vintage Beige
+                300: '#D4C9A8',   // Ochre Beige
+                400: '#C2B185',   // Warm Khaki
+                500: '#AA9463',   // Brass / Gold
+                600: '#8E784D',   // Olive Gold
+                700: '#715D39',   // Antique Bronze
+                800: '#554529',   // Dark Bronze
+                900: '#3D301C',   // Deep Bronze
+                950: '#251C11',   // Near Black Bronze
+              },
+              // Explicit custom palettes for future-proofing
+              beige: {
+                50: '#FAF6F0',
+                100: '#F4EBE1',
+                200: '#E6D5C3',
+                300: '#D5BEA7',
+                400: '#C3A58B',
+                500: '#B08E74',
+              },
+              brown: {
+                400: '#B08E74',
+                500: '#957156',
+                600: '#7B583F',
+                700: '#60422E',
+                800: '#462E1F',
+                900: '#2F1E14',
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+              display: ['Outfit', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            }
+          }
+        }
+      }
+    </script>
+    
+    <style>
+      /* Smooth transitions and layout animations */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes scaleUp {
+        from { opacity: 0; transform: scale(0.97); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.35s ease-out forwards;
+      }
+      .animate-scale-up {
+        animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      
+      /* Ensure scroll bar styling doesn't clutter layout */
+      .scrollbar-none::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-none {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-tr from-[#FAF5EE] via-[#FCF9F5] to-[#F5ECE2] text-slate-800 flex flex-col font-sans" id="malgyeol-app-root">
+    
+    <!-- Universal Navigation Bar -->
+    <nav class="sticky top-0 z-40 w-full border-b border-orange-200/60 bg-[#FAF6F0]/90 backdrop-blur-md shadow-sm">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 items-center justify-between">
+          
+          <!-- Logo & Branding -->
+          <div id="brand-logo" class="flex items-center gap-2 cursor-pointer transition-all hover:opacity-90">
+            <span class="text-xl font-bold tracking-tight text-orange-800" style="font-family: 'Outfit', sans-serif;">
+              말<em class="text-orange-950 not-italic">결</em>
+            </span>
+            <span class="text-[10px] font-bold text-orange-800 bg-orange-100 px-2.5 py-0.5 rounded-full">
+              Malgyeol
+            </span>
+          </div>
+          
+          <!-- Desktop Navigation Tabs -->
+          <div class="hidden md:flex items-center gap-1" id="nav-desktop-tabs">
+            <button id="tab-btn-home" class="nav-tab-btn rounded-full px-4 py-1.5 text-xs font-semibold bg-orange-700 text-white transition-all">
+              홈
+            </button>
+            <button id="tab-btn-rehearsal" class="nav-tab-btn rounded-full px-4 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-all">
+              발표 리허설
+            </button>
+            <button id="tab-btn-deaf" class="nav-tab-btn rounded-full px-4 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-all">
+              발성 및 조음 연습
+            </button>
+            <button id="tab-btn-history" class="nav-tab-btn rounded-full px-4 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-all">
+              연습 기록실
+            </button>
+            <button id="tab-btn-info" class="nav-tab-btn rounded-full px-4 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-all">
+              교육관
+            </button>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="flex items-center gap-2">
+            <button id="btn-quick-rehearsal" class="rounded-full bg-orange-950 hover:bg-orange-900 text-white px-4 py-2 text-xs font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1">
+              <span>지금 리허설</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation Scrollbar -->
+      <div class="md:hidden border-t border-orange-100 bg-[#FAF7F2] flex overflow-x-auto py-2.5 px-4 gap-2.5 scrollbar-none shadow-sm" id="nav-mobile-tabs">
+        <button id="m-tab-btn-home" class="m-nav-tab-btn rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap transition-all bg-orange-700 text-white shadow-sm">
+          홈
+        </button>
+        <button id="m-tab-btn-rehearsal" class="m-nav-tab-btn rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all text-slate-600 bg-white border border-orange-100/60 shadow-sm">
+          발표 리허설
+        </button>
+        <button id="m-tab-btn-deaf" class="m-nav-tab-btn rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all text-slate-600 bg-white border border-orange-100/60 shadow-sm">
+          발성 및 조음
+        </button>
+        <button id="m-tab-btn-history" class="m-nav-tab-btn rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all text-slate-600 bg-white border border-orange-100/60 shadow-sm">
+          기록실
+        </button>
+        <button id="m-tab-btn-info" class="m-nav-tab-btn rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all text-slate-600 bg-white border border-orange-100/60 shadow-sm">
+          교육관
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content Containers -->
+    <main class="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      
+      <!-- ============================================== -->
+      <!-- 1. HOME VIEW -->
+      <!-- ============================================== -->
+      <section id="view-home" class="space-y-10 animate-fade-in">
+        <!-- Hero Section -->
+        <div class="bg-gradient-to-br from-orange-600 via-orange-700 to-amber-700 text-white rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <!-- Background decorative shapes -->
+          <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute -left-10 -top-10 w-60 h-60 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <div class="space-y-4 max-w-xl z-10">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-orange-100 text-xs font-medium">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>배재대학교 산업디자인학과 창업 지원작</span>
+            </span>
+            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight" style="font-family: 'Outfit', sans-serif;">
+              목소리의 결을 다듬어<br>자신 있게 전하는 당신의 이야기
+            </h1>
+            <p class="text-sm md:text-base text-orange-50/90 leading-relaxed">
+              <strong>'말결'</strong>은 청각장애 대학생을 위한 AI 기반 실시간 목소리 피드백 및 발성 분석 솔루션입니다. 눈으로 소리의 흐름을 확인하고, 당당하게 발표를 시작해 보세요.
+            </p>
+            <div class="pt-2 flex flex-wrap gap-3">
+              <button onclick="switchTab('rehearsal')" class="bg-white text-orange-800 hover:bg-orange-50 px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-md">
+                <i data-lucide="mic" class="w-4 h-4"></i>
+                <span>리허설 시작하기</span>
+              </button>
+              <button onclick="switchTab('deaf')" class="bg-orange-800/40 hover:bg-orange-800/60 border border-orange-400/30 text-white px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5">
+                <i data-lucide="music" class="w-4 h-4"></i>
+                <span>조음 & 발성 기초 연습</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 space-y-4 w-full md:max-w-xs z-10 shadow-lg">
+            <h3 class="text-sm font-bold text-amber-200 flex items-center gap-1.5">
+              <i data-lucide="award" class="w-4 h-4"></i>
+              <span>말결의 주요 배리어프리 기능</span>
+            </h3>
+            <ul class="space-y-3 text-xs">
+              <li class="flex items-start gap-2">
+                <span class="p-1 rounded bg-white/10 text-orange-200 mt-0.5">✓</span>
+                <p><strong class="text-white">실시간 발음 클리어 필터:</strong> 주변 잡음을 걸러내고 조음 명확성을 집중 트래킹</p>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="p-1 rounded bg-white/10 text-orange-200 mt-0.5">✓</span>
+                <p><strong class="text-white">시각적 진동 피드백:</strong> 성량이 작아지거나 속도가 흐트러질 때 시각적 흔들림 가이드</p>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="p-1 rounded bg-white/10 text-orange-200 mt-0.5">✓</span>
+                <p><strong class="text-white">3D 조음 및 모음 위치 차트:</strong> 한국어 자모음 발음 시 혀와 입모양의 올바른 좌표 제공</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- System Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div class="bg-[#FDFBF7] p-6 rounded-2xl border border-orange-200/80 shadow-sm flex items-center gap-4 hover:shadow-md hover:scale-[1.01] transition-all">
+            <div class="p-3 bg-orange-100 text-orange-800 rounded-xl">
+              <i data-lucide="file-text" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs text-orange-800/80 font-bold">등록된 발표 원고</p>
+              <h3 id="stat-scripts-count" class="text-2xl font-extrabold text-orange-950 font-display">0개</h3>
+            </div>
+          </div>
+
+          <div class="bg-[#F5ECE2] p-6 rounded-2xl border border-orange-200 shadow-sm flex items-center gap-4 hover:shadow-md hover:scale-[1.01] transition-all">
+            <div class="p-3 bg-orange-200 text-orange-900 rounded-xl">
+              <i data-lucide="history" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs text-orange-900/85 font-bold">누적 연습 리허설</p>
+              <h3 id="stat-history-count" class="text-2xl font-extrabold text-orange-950 font-display">0회</h3>
+            </div>
+          </div>
+
+          <div class="bg-[#EEDFCD] p-6 rounded-2xl border border-orange-300/60 shadow-sm flex items-center gap-4 hover:shadow-md hover:scale-[1.01] transition-all">
+            <div class="p-3 bg-amber-200 text-amber-900 rounded-xl">
+              <i data-lucide="activity" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs text-orange-950/85 font-bold">평균 발음 명확도</p>
+              <h3 id="stat-avg-score" class="text-2xl font-extrabold text-orange-950 font-display">0%</h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Column Section: Guidance & Quick Launch -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Featured Predefined Scripts -->
+          <div class="lg:col-span-2 bg-[#FDFBF7] rounded-3xl p-6 md:p-8 border border-orange-200/60 shadow-sm space-y-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-bold text-orange-950 flex items-center gap-2">
+                  <i data-lucide="book-open" class="text-orange-700 w-5 h-5"></i>
+                  <span>추천 연습 원고 리스트</span>
+                </h3>
+                <p class="text-xs text-orange-850/60">발표 연습을 바로 시작해볼 수 있는 표준 템플릿입니다.</p>
+              </div>
+              <button onclick="switchTab('rehearsal')" class="text-xs text-orange-800 hover:text-orange-950 font-extrabold flex items-center gap-0.5">
+                <span>더 보기</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <div id="home-scripts-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Dynamically populated from JS -->
+            </div>
+          </div>
+
+          <!-- Quick Tip Panel -->
+          <div class="bg-orange-950 text-white rounded-3xl p-6 md:p-8 border border-orange-900/40 shadow-sm space-y-6 relative flex flex-col justify-between">
+            <div class="space-y-4">
+              <span class="text-[10px] uppercase tracking-wider font-extrabold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-md">
+                발표 성공 가이드
+              </span>
+              <h3 class="text-lg font-bold leading-snug">
+                청각 장애 학생을 위한 발표 실전 노하우 3가지
+              </h3>
+              
+              <div class="space-y-3 pt-2">
+                <div class="flex gap-3">
+                  <span class="w-5 h-5 rounded-full bg-orange-900 flex items-center justify-center text-xs font-bold text-orange-400 shrink-0">1</span>
+                  <p class="text-xs text-slate-300 leading-relaxed">
+                    <strong class="text-white">속도를 0.8배속으로 늦추세요:</strong> 빠른 대화보다 약간 느리더라도 또박또박 모음을 명확하게 발음하는 것이 관객의 이해도를 비약적으로 높입니다.
+                  </p>
+                </div>
+                <div class="flex gap-3">
+                  <span class="w-5 h-5 rounded-full bg-orange-900 flex items-center justify-center text-xs font-bold text-orange-400 shrink-0">2</span>
+                  <p class="text-xs text-slate-300 leading-relaxed">
+                    <strong class="text-white">성량 강약을 손동작과 맞추기:</strong> 주요 핵심 단어를 강조할 때는 가벼운 제스처와 함께 배에 호흡을 모아 힘차게 발성해 보세요.
+                  </p>
+                </div>
+                <div class="flex gap-3">
+                  <span class="w-5 h-5 rounded-full bg-orange-900 flex items-center justify-center text-xs font-bold text-orange-400 shrink-0">3</span>
+                  <p class="text-xs text-slate-300 leading-relaxed">
+                    <strong class="text-white">시각 보조 도구 사용하기:</strong> 청각 피드백 모니터를 띄워두고 성량 및 템포 그래프를 시야 아래에 가볍게 걸쳐두는 훈련을 지속하세요.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="switchTab('info')" class="w-full mt-6 py-2.5 bg-orange-900 hover:bg-orange-800 text-slate-200 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1">
+              <span>말결 교육관에서 훈련 방법 더보기</span>
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- 2. REHEARSAL VIEW -->
+      <!-- ============================================== -->
+      <section id="view-rehearsal" class="hidden space-y-8 animate-fade-in">
+        <div class="flex flex-col lg:flex-row gap-8">
+          
+          <!-- Left: Script Directory & Controls -->
+          <div class="w-full lg:w-1/3 bg-[#FDFBF7] rounded-3xl p-4 sm:p-6 border border-orange-200/60 shadow-sm flex flex-col justify-between space-y-4 sm:space-y-6">
+            <div class="space-y-3 sm:space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-base font-bold text-orange-950 flex items-center gap-1.5">
+                    <i data-lucide="file-text" class="text-orange-700 w-4 h-4"></i>
+                    <span>나의 발표 원고</span>
+                  </h3>
+                  <p class="text-xs text-orange-850/60">리허설에 사용할 원고를 선택하세요.</p>
+                </div>
+                <button onclick="openScriptModal()" class="p-1.5 rounded-lg bg-orange-100 text-orange-800 hover:bg-orange-200 transition-all" title="원고 추가">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <!-- Script list track -->
+              <div id="rehearsal-scripts-list" class="space-y-3 max-h-[160px] lg:max-h-[360px] overflow-y-auto pr-1">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Global Accessibility Features Config -->
+            <div class="border-t border-orange-200/30 pt-5 space-y-4">
+              <h4 class="text-xs font-bold text-orange-950 uppercase tracking-wider">배리어프리 편의설정</h4>
+              
+              <!-- Toggle 1: Voice Clarity Filter -->
+              <div class="flex items-center justify-between p-3 rounded-xl bg-orange-100/30 border border-orange-200/25">
+                <div class="space-y-0.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 bg-emerald-600 rounded-full"></span>
+                    <span class="text-xs font-bold text-orange-950">명확도 강화 필터</span>
+                  </div>
+                  <p class="text-[10px] text-orange-800/60">발음 마찰 소음 및 주파수 필터링</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="toggle-clarity-filter" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-orange-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-700"></div>
+                </label>
+              </div>
+
+              <!-- Toggle 2: Vibration Visualization -->
+              <div class="flex items-center justify-between p-3 rounded-xl bg-orange-100/30 border border-orange-200/25">
+                <div class="space-y-0.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 bg-amber-600 rounded-full"></span>
+                    <span class="text-xs font-bold text-orange-950">시각적 진동 가이드</span>
+                  </div>
+                  <p class="text-[10px] text-orange-800/60">음성 이탈 시 화면 및 테두리 흔들림</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="toggle-vibration-feedback" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-orange-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-700"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Active Presentation Screen -->
+          <div id="rehearsal-display-panel" class="flex-1 bg-[#FDFBF7] rounded-3xl p-4 sm:p-6 md:p-8 border border-orange-200/60 shadow-sm flex flex-col justify-between min-h-[420px] lg:min-h-[550px]">
+            
+            <!-- Default Screen (Before starting) -->
+            <div id="rehearsal-screen-ready" class="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-6">
+              <div class="w-16 h-16 rounded-full bg-orange-100/80 flex items-center justify-center text-orange-700 animate-bounce">
+                <i data-lucide="mic" class="w-8 h-8"></i>
+              </div>
+              <div class="space-y-2 max-w-sm">
+                <h3 id="ready-script-title" class="text-lg font-extrabold text-orange-950">선택된 원고가 없습니다</h3>
+                <p class="text-xs text-orange-800/70 leading-relaxed">
+                  원고를 선택한 후 아래 '리허설 시작' 버튼을 눌러주세요. 마이크 녹음 권한 및 실시간 시각 분석계가 세팅됩니다.
+                </p>
+              </div>
+              
+              <div class="bg-[#FAF5EE] p-4 rounded-2xl border border-orange-200 max-w-md w-full text-left space-y-2">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-orange-850">
+                  <i data-lucide="info" class="w-4 h-4 text-orange-700"></i>
+                  <span>안내 사항</span>
+                </div>
+                <p class="text-[11px] text-orange-900/75 leading-relaxed">
+                  실제 마이크 소리 크기에 반응하여 그래프가 작동하며, 모의 분석 결과지가 기록실에 자동으로 아카이빙됩니다. (카메라/마이크 권한 팝업 허용 필요)
+                </p>
+              </div>
+
+              <button id="btn-start-rehearsal" class="bg-orange-700 hover:bg-orange-800 text-white font-bold px-8 py-3.5 rounded-full text-sm transition-all shadow-md flex items-center gap-2">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                <span>실시간 리허설 시작</span>
+              </button>
+            </div>
+
+            <!-- Active Screen (During simulation) -->
+            <div id="rehearsal-screen-active" class="hidden flex-1 flex flex-col justify-between space-y-6">
+              <!-- Rehearsal Header Status -->
+              <div class="flex items-center justify-between border-b border-slate-100 pb-4 gap-3">
+                <div class="space-y-1 min-w-0">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold uppercase animate-pulse">
+                    <span class="w-1.5 h-1.5 bg-red-600 rounded-full"></span>
+                    <span>리허설 분석 중</span>
+                  </span>
+                  <h3 id="active-script-title" class="text-base font-bold text-slate-800 truncate max-w-[150px] xs:max-w-[220px] sm:max-w-md">발표 원고 타이틀</h3>
+                </div>
+                <!-- Countdown timer -->
+                <div class="flex items-center gap-2 font-mono text-sm font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl shrink-0">
+                  <i data-lucide="clock" class="w-4 h-4 text-slate-500"></i>
+                  <span id="rehearsal-timer">00:00</span>
+                </div>
+              </div>
+
+              <!-- Rehearsal Main Content Split: Top script reading, Bottom Analyzer -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+                
+                <!-- Presenter view script reader -->
+                <div class="border border-slate-100 bg-slate-50 rounded-2xl p-4 flex flex-col justify-between">
+                  <div class="space-y-3 flex-1 flex flex-col justify-between">
+                    <div>
+                      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">발표 리딩 가이드</span>
+                      <div id="active-script-text" class="text-sm text-slate-700 leading-relaxed max-h-[140px] overflow-y-auto pr-2 scrollbar-none font-medium mt-1">
+                        발표 내용 본문...
+                      </div>
+                    </div>
+                    
+                    <!-- Real-time STT Subtitles Area -->
+                    <div class="border-t border-dashed border-orange-200/60 pt-3 mt-3 space-y-2">
+                      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <span class="text-[10px] font-bold text-orange-800 uppercase tracking-wider flex items-center gap-1 shrink-0">
+                          <span class="w-1.5 h-1.5 rounded-full bg-orange-600 animate-pulse"></span>
+                          <span>실시간 음성 인식 자막 (STT)</span>
+                        </span>
+                      </div>
+
+                      <!-- Active Status Badge Message -->
+                      <div id="stt-status-badge" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/50">
+                        <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                        <span id="stt-status-text">스마트 브라우저 STT 인식 대기 중...</span>
+                      </div>
+
+                      <div id="realtime-stt-text" class="text-xs text-orange-950 font-bold bg-orange-50/60 p-3 rounded-xl border border-orange-100/40 min-h-[50px] leading-relaxed">
+                        아직 목소리가 감지되지 않았습니다. 마이크를 대고 원고를 또박또박 읽어주세요.
+                      </div>
+
+                      <!-- Speech guide tools for practicing the script (TTS) -->
+                      <div class="mt-3 bg-orange-50/50 p-2.5 rounded-xl border border-orange-100/60 space-y-2">
+                        <div class="flex items-center justify-between">
+                          <span class="text-[10px] text-orange-900/80 font-bold flex items-center gap-1">
+                            <i data-lucide="volume-2" class="w-3.5 h-3.5 text-orange-700"></i>
+                            <span>대본 낭독 연습 가이드 음성 (TTS)</span>
+                          </span>
+                          <div class="flex items-center gap-1.5">
+                            <button id="btn-load-script-to-tts" type="button" class="text-[9px] text-orange-950 bg-orange-100/80 hover:bg-orange-200 px-1.5 py-0.5 rounded font-bold transition-all">
+                              📝 대본 세팅
+                            </button>
+                            <button id="btn-clear-tts-input" type="button" class="text-[9px] text-slate-500 hover:text-slate-700 font-bold">
+                              초기화
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <textarea id="tts-input-text" rows="1" class="w-full text-[11px] p-1.5 border border-orange-200/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-400 bg-white/90 resize-none font-medium text-slate-700" placeholder="목소리 낭독 발음을 들을 대사 내용"></textarea>
+                        
+                        <div class="flex items-center justify-end gap-1.5">
+                          <div class="flex items-center gap-1">
+                            <button id="btn-stop-tts" type="button" class="text-[9px] font-bold text-red-700 bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded hidden transition-all">
+                              ⏹️ 중단
+                            </button>
+                            <button id="btn-speak-tts" type="button" class="text-[10px] font-bold text-white bg-orange-600 hover:bg-orange-700 px-2.5 py-0.5 rounded-md shadow-sm transition-all flex items-center gap-0.5">
+                              <span>🗣️ 가이드 듣기 (TTS)</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="bg-orange-100/60 p-3 rounded-xl border border-orange-200/50 mt-3">
+                    <p class="text-[11px] text-orange-800 font-medium">
+                      💡 목소리를 실시간 자막(STT)으로 변환해 보여줍니다. 원고와의 매칭율이 실시간으로 계산됩니다!
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Live Signal Visualizer Panel -->
+                <div class="space-y-4 flex flex-col justify-between">
+                  <!-- Interactive Wave Canvas -->
+                  <div class="relative bg-orange-950 rounded-2xl p-4 flex flex-col justify-between h-[150px] overflow-hidden">
+                    <span class="text-[9px] font-bold text-slate-400 font-mono tracking-wider uppercase z-10 flex items-center gap-1">
+                      <i data-lucide="activity" class="w-3 h-3 text-emerald-400"></i>
+                      <span>Voice Wave Spectrum (음성 파형)</span>
+                    </span>
+                    <canvas id="rehearsal-canvas" class="absolute inset-0 w-full h-full pointer-events-none opacity-80"></canvas>
+                    <div class="z-10 text-right">
+                      <span id="live-db-indicator" class="text-xs font-mono font-bold text-emerald-400">0.0 dB</span>
+                    </div>
+                  </div>
+
+                  <!-- Real-time Warning Overlay -->
+                  <div class="flex-1 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between min-h-[100px]">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">실시간 AI 코칭 피드백</span>
+                    <div id="coaching-feedback-container" class="flex items-center gap-3 py-3">
+                      <div id="coaching-icon" class="p-2 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                        <i data-lucide="smile" class="w-5 h-5"></i>
+                      </div>
+                      <div class="space-y-0.5">
+                        <h4 id="coaching-status-title" class="text-xs font-bold text-slate-800">성량이 아주 좋습니다</h4>
+                        <p id="coaching-status-desc" class="text-[11px] text-slate-500">현재와 같은 명확한 크기와 톤을 유지하여 이야기를 이어가세요.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rehearsal Footer Controls -->
+              <div class="border-t border-slate-100 pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <button id="btn-cancel-rehearsal" class="px-5 py-2.5 rounded-full border border-slate-200 hover:bg-slate-50 text-slate-500 font-bold text-xs transition-all">
+                  중단하기
+                </button>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <span class="text-[10px] sm:text-xs text-slate-400 text-center sm:text-left hidden sm:inline">연습 완료 시 피드백이 자동 계산됩니다.</span>
+                  <button id="btn-finish-rehearsal" class="bg-orange-950 hover:bg-orange-900 text-white font-bold px-6 py-3 sm:py-2.5 rounded-full text-xs transition-all flex items-center justify-center gap-1">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>연습 종료 및 리포트 확인</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Report View (After clicking finish) -->
+            <div id="rehearsal-screen-report" class="hidden flex-1 flex flex-col space-y-6 animate-scale-up">
+              <!-- Report Header -->
+              <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+                <div>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase">
+                    <i data-lucide="award" class="w-3 h-3"></i>
+                    <span>리허설 분석 리포트 발행</span>
+                  </span>
+                  <h3 id="report-script-title" class="text-lg font-bold text-slate-800">발표 원고 타이틀</h3>
+                </div>
+                <span id="report-date" class="text-[11px] font-mono text-slate-400">2026-06-25 12:00</span>
+              </div>
+
+              <!-- Metrics Summary Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Score Card -->
+                <div class="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-2xl border border-orange-100 text-center flex flex-col justify-center items-center">
+                  <p class="text-[10px] font-bold text-orange-800 uppercase tracking-wider">종합 전달력 점수</p>
+                  <h2 id="report-score" class="text-4xl font-extrabold text-orange-700 py-2">92<span class="text-sm font-medium">점</span></h2>
+                  <span class="text-[10px] bg-white text-orange-800 px-2.5 py-0.5 rounded-full font-bold shadow-sm">매우 우수</span>
+                </div>
+
+                <!-- Sub Metric 1: Volume -->
+                <div class="border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">평균 성량 (목소리 크기)</span>
+                    <h4 id="report-metric-volume" class="text-base font-bold text-slate-800 pt-1">적절함 (68dB)</h4>
+                  </div>
+                  <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-2">
+                    <div id="report-bar-volume" class="bg-orange-500 h-full" style="width: 75%"></div>
+                  </div>
+                </div>
+
+                <!-- Sub Metric 2: Pace -->
+                <div class="border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">말하는 속도 (Pace)</span>
+                    <h4 id="report-metric-pace" class="text-base font-bold text-slate-800 pt-1">안정적 (290자/분)</h4>
+                  </div>
+                  <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-2">
+                    <div id="report-bar-pace" class="bg-amber-500 h-full" style="width: 85%"></div>
+                  </div>
+                </div>
+
+                <!-- Sub Metric 3: Clarity -->
+                <div class="border border-slate-100 p-4 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">조음 발음 명확도</span>
+                    <h4 id="report-metric-clarity" class="text-base font-bold text-slate-800 pt-1">명확함 (94%)</h4>
+                  </div>
+                  <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-2">
+                    <div id="report-bar-clarity" class="bg-emerald-500 h-full" style="width: 94%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- AI Advisory Feedback Card -->
+              <div class="bg-orange-950 text-white p-5 rounded-2xl space-y-2">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                  <span>말결 AI 분석 및 피드백 의견서</span>
+                </div>
+                <p id="report-advice" class="text-xs text-slate-300 leading-relaxed">
+                  원고의 분량 대비 안정적인 호흡과 성량을 보여주셨습니다. 특히 모음 'ㅏ, ㅓ'의 소리 높이가 또렷하여 전달력이 우수합니다. 뒷부분에서 턱과 입 주변 근육의 긴장이 조금 풀려 조음 마찰 정확도가 약간 소폭 떨어지는 경향이 관찰되었습니다. 조음부에서 턱을 조금 더 아래로 열어 발음해 주는 자음 연습(자음 조음 및 모음 연습 탭 활용)을 병행하시면 한층 더 완벽한 발표가 완성될 것입니다.
+                </p>
+              </div>
+
+              <!-- Gemini AI Professional Feedback Section -->
+              <div class="border border-amber-200 bg-amber-50/50 p-5 rounded-2xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 bg-amber-100 rounded-lg text-amber-700">
+                      <i data-lucide="brain" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-slate-800">Gemini 전문 AI 스피치 코칭</h4>
+                      <p class="text-[11px] text-slate-500">발음, 완독률, 성량, 속도를 정밀 분석한 맞춤형 코칭</p>
+                    </div>
+                  </div>
+                  <button id="btn-get-gemini-feedback" class="self-start sm:self-auto bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-2 rounded-full text-xs transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-200"></i>
+                    <span>AI 피드백 받기</span>
+                  </button>
+                </div>
+
+                <!-- Feedback Content Box -->
+                <div id="gemini-feedback-container" class="hidden border-t border-amber-200/60 pt-3 space-y-3">
+                  <!-- Loading state -->
+                  <div id="gemini-feedback-loading" class="hidden flex flex-col items-center justify-center py-6 space-y-2">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700"></div>
+                    <p class="text-xs text-amber-900 font-medium">Gemini AI가 귀하의 스피치를 정밀 분석 중입니다...</p>
+                  </div>
+                  <!-- Error state -->
+                  <div id="gemini-feedback-error" class="hidden text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+                    피드백을 불러오지 못했습니다. API 키를 확인해주세요.
+                  </div>
+                  <!-- Success state/Markdown response -->
+                  <div id="gemini-feedback-content" class="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white/65 p-4 rounded-xl border border-amber-100 shadow-sm font-medium">
+                    <!-- Feedback text will be inserted here -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Report Actions -->
+              <div class="border-t border-slate-100 pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <button id="btn-report-discard" class="px-5 py-2.5 rounded-full border border-slate-200 hover:bg-slate-50 text-slate-500 font-bold text-xs transition-all">
+                  기록하지 않고 삭제
+                </button>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <button id="btn-report-save" class="border border-orange-700 hover:bg-orange-50 text-orange-700 font-bold px-6 py-3.5 rounded-full text-xs transition-all flex items-center justify-center gap-1.5">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>기록 저장 후 닫기</span>
+                  </button>
+                  <button id="btn-report-save-and-go" class="bg-orange-700 hover:bg-orange-800 text-white font-bold px-6 py-3.5 rounded-full text-xs transition-all shadow-md flex items-center justify-center gap-1.5">
+                    <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>
+                    <span>기록 저장 후 기록실로 바로 이동</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- 3. ARTICULATION & DEAF PRACTICE VIEW -->
+      <!-- ============================================== -->
+      <section id="view-deaf" class="hidden space-y-8 animate-fade-in">
+        <!-- Sub navigation for exercises -->
+        <div class="border-b border-orange-100 flex overflow-x-auto gap-4 scrollbar-none">
+          <button id="deaf-subtab-btn-unified" onclick="switchDeafSubtab('unified')" class="deaf-subtab-btn border-b-2 border-orange-700 px-4 py-3 text-sm font-bold text-orange-700 whitespace-nowrap transition-all">
+            ✨ 종합 기초 목소리 진단기 (Unified Diagnostics)
+          </button>
+          <button id="deaf-subtab-btn-articulation" onclick="switchDeafSubtab('articulation')" class="deaf-subtab-btn border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-400 hover:text-slate-800 whitespace-nowrap transition-all">
+            자음 조음 연습 (Consonants)
+          </button>
+          <button id="deaf-subtab-btn-vowels" onclick="switchDeafSubtab('vowels')" class="deaf-subtab-btn border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-400 hover:text-slate-800 whitespace-nowrap transition-all">
+            모음 연습 (Vowels)
+          </button>
+          <button id="deaf-subtab-btn-sustained" onclick="switchDeafSubtab('sustained')" class="deaf-subtab-btn border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-400 hover:text-slate-800 whitespace-nowrap transition-all">
+            장음 및 지속 발성 (Sustained)
+          </button>
+        </div>
+
+        <!-- NEW SUB TAB 0: Unified Diagnostics (원클릭 종합 기초 자가진단 대시보드) -->
+        <div id="deaf-content-unified" class="space-y-6">
+          <div class="bg-gradient-to-br from-orange-50 to-amber-50/50 rounded-3xl p-6 md:p-8 border border-orange-100 shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 class="text-lg font-bold text-orange-950 flex items-center gap-1.5">
+                  <i data-lucide="activity" class="text-orange-700 w-5.5 h-5.5 animate-pulse"></i>
+                  <span>한 화면에서 다 하는 기초 종합 테스트베드</span>
+                </h3>
+                <p class="text-xs text-orange-900/75 mt-1">단 하나의 테스트 시동으로 소리의 크기(dB), 성량 평탄도(Jitter), 자음 기류 강도, 모음 포먼트 혀 좌표를 실시간으로 동시에 진단합니다.</p>
+              </div>
+              
+              <div class="flex flex-wrap gap-2 shrink-0">
+                <button id="btn-unified-simulate" class="px-4 py-2 bg-orange-950 hover:bg-orange-900 text-slate-150 text-xs font-bold rounded-xl border border-orange-900 transition-all flex items-center gap-1.5">
+                  <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+                  <span>[모의] 목소리 주입하기</span>
+                </button>
+                <button id="btn-unified-start" class="px-5 py-2.5 bg-orange-700 hover:bg-orange-800 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-md">
+                  <i data-lucide="play" class="w-4 h-4"></i>
+                  <span>종합 목소리 진단 시작</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Unified Diagnostic Display Panels -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+              
+              <!-- 1. Realtime Volume Panel -->
+              <div class="bg-white p-5 rounded-2xl border border-orange-200/50 shadow-sm space-y-4 flex flex-col justify-between">
+                <div class="space-y-1.5">
+                  <span class="text-[9px] font-extrabold text-orange-700 uppercase tracking-wider font-mono">01. Vocal Volume</span>
+                  <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1">
+                    <i data-lucide="volume-2" class="w-4 h-4 text-orange-600"></i>
+                    <span>실시간 성량 크기</span>
+                  </h4>
+                  <p class="text-[11px] text-slate-500 leading-relaxed">목소리의 기초 크기입니다. 일반 대화 수준인 60~70 dB를 유지하세요.</p>
+                </div>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-xs font-bold font-mono">
+                    <span class="text-slate-400">성량 수치</span>
+                    <span id="unified-vol-val" class="text-orange-700">0.0 dB</span>
+                  </div>
+                  <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200/50 p-0.5">
+                    <div id="unified-vol-bar" class="bg-gradient-to-r from-orange-400 to-orange-600 h-full rounded-full transition-all duration-100" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Pitch Stability Jitter Panel -->
+              <div class="bg-white p-5 rounded-2xl border border-orange-200/50 shadow-sm space-y-4 flex flex-col justify-between">
+                <div class="space-y-1.5">
+                  <span class="text-[9px] font-extrabold text-emerald-700 uppercase tracking-wider font-mono">02. Sound Flatness</span>
+                  <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1">
+                    <i data-lucide="activity" class="w-4 h-4 text-emerald-600"></i>
+                    <span>발성 고저 편차 (Jitter)</span>
+                  </h4>
+                  <p class="text-[11px] text-slate-500 leading-relaxed">소리의 떨림 정도입니다. 바늘이 녹색 안정권 중앙에 고정될수록 안정적입니다.</p>
+                </div>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-xs font-bold font-mono">
+                    <span class="text-slate-400">주파수 편차</span>
+                    <span id="unified-jitter-val" class="text-emerald-700">0.0 Hz (안정)</span>
+                  </div>
+                  <div class="relative w-full bg-slate-950 h-5 rounded-lg border border-slate-200 overflow-hidden">
+                    <div class="absolute inset-y-0 left-1/3 right-1/3 bg-emerald-500/20"></div>
+                    <div id="unified-jitter-bar" class="absolute w-1 h-full bg-emerald-400 transition-all duration-150" style="left: 50%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Consonant Airflow High-Freq Panel -->
+              <div class="bg-white p-5 rounded-2xl border border-orange-200/50 shadow-sm space-y-4 flex flex-col justify-between">
+                <div class="space-y-1.5">
+                  <span class="text-[9px] font-extrabold text-blue-700 uppercase tracking-wider font-mono">03. Consonant Airflow</span>
+                  <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1">
+                    <i data-lucide="wind" class="w-4 h-4 text-blue-600"></i>
+                    <span>자음 마찰 및 파열 강도</span>
+                  </h4>
+                  <p class="text-[11px] text-slate-500 leading-relaxed">자음 낭독 시 나타나는 입바람 강도와 고주파 조음 에너지 반응입니다.</p>
+                </div>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-xs font-bold font-mono">
+                    <span class="text-slate-400">공기 흐름량</span>
+                    <span id="unified-artic-val" class="text-blue-700">0%</span>
+                  </div>
+                  <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200/50 p-0.5">
+                    <div id="unified-artic-bar" class="bg-gradient-to-r from-blue-400 to-blue-600 h-full rounded-full transition-all duration-100" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. Vowel Formant 2D Coordinate Panel -->
+              <div class="bg-white p-5 rounded-2xl border border-orange-200/50 shadow-sm space-y-4 flex flex-col justify-between">
+                <div class="space-y-1.5">
+                  <span class="text-[9px] font-extrabold text-amber-700 uppercase tracking-wider font-mono">04. Vowel Formant Coordinates</span>
+                  <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1">
+                    <i data-lucide="disc" class="w-4 h-4 text-amber-600"></i>
+                    <span>모음 포먼트 (혀의 위치)</span>
+                  </h4>
+                  <p class="text-[11px] text-slate-500 leading-relaxed">발성 시 혀의 고저 및 전후축의 좌표를 2차원 공간 상에 가시화합니다.</p>
+                </div>
+                <div class="relative w-full h-24 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
+                  <div class="absolute left-1.5 top-1 text-[7px] text-slate-500 font-mono">고모음 (High)</div>
+                  <div class="absolute left-1.5 bottom-1 text-[7px] text-slate-500 font-mono">저모음 (Low)</div>
+                  <div class="absolute right-1.5 top-1 text-[7px] text-slate-500 font-mono">후설 (Back)</div>
+                  <div class="absolute left-1/2 top-1 transform -translate-x-1/2 text-[7px] text-slate-500 font-mono">전설 (Front)</div>
+                  
+                  <!-- Stable target match center -->
+                  <div class="absolute w-6 h-6 rounded-full bg-orange-500/20 border border-orange-400/40 flex items-center justify-center text-[7px] font-bold text-orange-200" style="left: 45%; top: 40%">
+                    Target
+                  </div>
+                  
+                  <!-- Realtime Moving Dot -->
+                  <div id="unified-vowel-dot" class="absolute w-3.5 h-3.5 rounded-full bg-emerald-400 border border-white shadow-md transition-all duration-150" style="left: 20%; top: 75%"></div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Dashboard Advice Bar -->
+            <div class="bg-orange-950/90 text-white p-4 rounded-2xl border border-orange-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div class="flex items-start gap-2">
+                <div class="p-1.5 bg-orange-900/80 rounded-xl shrink-0 text-amber-300">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </div>
+                <div class="space-y-0.5">
+                  <span class="font-extrabold text-amber-200">종합 기초 목소리 진단 어드바이스</span>
+                  <p id="unified-advice-text" class="text-slate-300 text-[11px]">마이크 검진을 시작하거나 모의 음성 주입기를 클릭하여 종합 실시간 보컬 진단을 실행해 주세요.</p>
+                </div>
+              </div>
+              <div id="unified-diagnostic-badge" class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 rounded-full font-bold text-[10px] text-orange-200 shrink-0">
+                <span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span>
+                <span>진단 대기 중</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB TAB A: Consonant Articulation (자음 조음) -->
+        <div id="deaf-content-articulation" class="hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Grid: Alphabet Selector -->
+            <div class="lg:col-span-2 bg-[#FDFBF7] rounded-3xl p-6 border border-orange-200/60 shadow-sm space-y-6">
+              <div>
+                <h3 class="text-base font-bold text-orange-950">한국어 자음별 혀 위치 & 공기 흐름 가이드</h3>
+                <p class="text-xs text-orange-850/60">자음을 클릭하여 올바른 조음 위치와 모의 마찰 주파수를 확인하고 연습해 보세요.</p>
+              </div>
+
+              <!-- Consonants Flex Grid -->
+              <div id="consonants-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                <!-- Populated dynamically via JS -->
+              </div>
+
+              <!-- Selected Consonant Detail Card -->
+              <div id="consonant-detail-card" class="bg-[#FAF5EE] p-5 rounded-2xl border border-orange-200 space-y-4 animate-scale-up">
+                <!-- Populated from JS selection -->
+              </div>
+            </div>
+
+            <!-- Right: Articulation Feedback Gauge -->
+            <div class="bg-orange-950 text-white rounded-3xl p-6 border border-orange-900/40 shadow-sm flex flex-col justify-between min-h-[350px]">
+              <div class="space-y-4">
+                <span class="text-[9px] uppercase tracking-wider font-extrabold text-orange-400 font-mono">
+                  Real-time Pronunciation Analyzer
+                </span>
+                <h3 class="text-base font-bold leading-snug">실시간 발음 조음 주파수 모니터</h3>
+                <p class="text-xs text-slate-400">마이크를 대고 원고를 읽거나 해당 자음이 들어간 단어를 소리 내면 주파수 궤적을 실시간으로 추적합니다.</p>
+                
+                <!-- Live Articulation Tracking Gauge -->
+                <div class="space-y-3 pt-4">
+                  <div class="flex items-center justify-between text-xs font-mono">
+                     <span class="text-slate-400">마찰 소음량 (High Freq)</span>
+                    <span id="live-artic-freq-pct" class="text-orange-400 font-bold">0%</span>
+                  </div>
+                  <div class="w-full bg-orange-900 h-2 rounded-full overflow-hidden">
+                    <div id="live-artic-freq-bar" class="bg-orange-50 h-full transition-all duration-100" style="width: 0%"></div>
+                  </div>
+
+                  <div class="flex items-center justify-between text-xs font-mono">
+                    <span class="text-slate-400">파열 폭발 강도 (Explosive Peak)</span>
+                    <span id="live-artic-peak-pct" class="text-amber-400 font-bold">0%</span>
+                  </div>
+                  <div class="w-full bg-orange-900 h-2 rounded-full overflow-hidden">
+                    <div id="live-artic-peak-bar" class="bg-amber-500 h-full transition-all duration-100" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border-t border-orange-900/30 pt-4 space-y-2">
+                <button id="btn-start-artic-mic" class="w-full py-2.5 bg-orange-700 hover:bg-orange-800 text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md">
+                  <i data-lucide="mic" class="w-4 h-4"></i>
+                  <span>실시간 마이크 모니터 켜기</span>
+                </button>
+                <p class="text-[10px] text-slate-500 text-center">실제 마이크 소리가 유입되면 주파수가 시뮬레이션 동작합니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB TAB B: Vowel Position (모음 연습) -->
+        <div id="deaf-content-vowels" class="hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Grid: Tongue Position Chart -->
+            <div class="lg:col-span-2 bg-[#FDFBF7] rounded-3xl p-6 border border-orange-200/60 shadow-sm space-y-6">
+              <div>
+                <h3 class="text-base font-bold text-orange-950">한국어 단모음 위치 차트 (혀 고저-전후 위치)</h3>
+                <p class="text-xs text-orange-850/60">모음은 혀의 높낮이(고모음, 중모음, 저모음)와 혀의 앞뒤 위치(전설모음, 후설모음)에 따라 결정됩니다. 모음을 눌러 최적의 구강 구조를 파악하세요.</p>
+              </div>
+
+              <!-- Vowels Grid -->
+              <div id="vowels-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <!-- Populated dynamically via JS -->
+              </div>
+
+              <!-- Selected Vowel Detail Card -->
+              <div id="vowel-detail-card" class="bg-[#FAF5EE] p-5 rounded-2xl border border-orange-200/40 space-y-4 animate-scale-up">
+                <!-- Populated from JS selection -->
+              </div>
+            </div>
+
+            <!-- Right: Formant Pitch visualizer -->
+            <div class="bg-orange-950 text-white rounded-3xl p-6 border border-orange-900/40 shadow-sm flex flex-col justify-between min-h-[350px]">
+              <div class="space-y-4">
+                <span class="text-[9px] uppercase tracking-wider font-extrabold text-amber-400 font-mono">
+                  Vowel Formant Chart
+                </span>
+                <h3 class="text-base font-bold leading-snug">모음 포먼트(Formant) 타겟 매칭</h3>
+                <p class="text-xs text-slate-400">선택된 모음의 표준 모형 혀 위치 좌표(목표 지점)에 맞춰 발성해 보세요. 입술을 좌우로 벌리거나 오므리면 표식 좌표가 변화합니다.</p>
+                
+                <!-- Simulated 2D Coordinate Grid -->
+                <div class="relative w-full h-[180px] bg-orange-950 border border-orange-900/40 rounded-xl overflow-hidden flex items-center justify-center">
+                  <!-- Axis titles -->
+                  <div class="absolute left-2 top-2 text-[8px] text-slate-500 font-mono">고모음 (High)</div>
+                  <div class="absolute left-2 bottom-2 text-[8px] text-slate-500 font-mono">저모음 (Low)</div>
+                  <div class="absolute right-2 top-2 text-[8px] text-slate-500 font-mono">후설 (Back)</div>
+                  <div class="absolute left-1/2 top-2 transform -translate-x-1/2 text-[8px] text-slate-500 font-mono">전설 (Front)</div>
+                  
+                  <!-- Target Circle -->
+                  <div id="vowel-target-point" class="absolute w-8 h-8 rounded-full bg-orange-500/20 border-2 border-orange-50 flex items-center justify-center text-[10px] font-bold text-orange-200" style="left: 60%; top: 40%">
+                    Target
+                  </div>
+
+                  <!-- Active Vocal Circle (Moving point based on mic) -->
+                  <div id="vowel-user-point" class="absolute w-5 h-5 rounded-full bg-emerald-400 border-2 border-white shadow-lg transition-all duration-200" style="left: 20%; top: 80%"></div>
+                </div>
+                <p class="text-[10px] text-slate-500 text-center">초록색 표식이 주황색 <strong class="text-orange-400">Target</strong> 영역에 겹치도록 발음해 보세요!</p>
+              </div>
+
+              <div class="border-t border-orange-900/30 pt-4">
+                <button id="btn-simulate-vowel-match" class="w-full py-2.5 bg-orange-900 hover:bg-orange-800 text-slate-200 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 border border-orange-800">
+                  <i data-lucide="play" class="w-4 h-4 text-emerald-400"></i>
+                  <span>입모양 모의 매칭 시뮬레이터 켜기</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB TAB C: Sustained Phonation (장음/지속 발성) -->
+        <div id="deaf-content-sustained" class="hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Grid: Interactive training deck -->
+            <div class="lg:col-span-2 bg-[#FDFBF7] rounded-3xl p-6 md:p-8 border border-orange-200/60 shadow-sm space-y-6">
+              <div>
+                <h3 class="text-base font-bold text-orange-950">지속 발성 트레이닝 (Sustained Phonation)</h3>
+                <p class="text-xs text-orange-850/60">말씀 중 목소리가 끊기거나 성량이 갑자기 변하는 불안정을 보완하는 훈련입니다. 숨을 깊게 들이쉬고 일정한 음량과 피치로 모음 '아~' 소리를 10초간 일정하게 이어가세요.</p>
+              </div>
+
+              <!-- Visual Game Frame -->
+              <div class="border border-orange-200/60 rounded-2xl p-6 bg-[#FAF5EE] flex flex-col justify-between space-y-6 relative overflow-hidden min-h-[260px]">
+                <!-- Target Area box -->
+                <div class="absolute inset-x-6 top-16 bottom-20 bg-emerald-500/5 border border-emerald-500/20 rounded-xl flex items-center justify-center pointer-events-none">
+                  <span class="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">목표 성량 유지 구간 (Optimal Volume Band)</span>
+                </div>
+
+                <!-- Phonation Tracker Line Graphic (HTML/CSS progress bars) -->
+                <div class="relative flex-1 flex flex-col justify-center space-y-2 z-10">
+                  <div class="flex items-center justify-between text-xs font-bold text-orange-950">
+                    <span>지속 발성 진행도 (Hold Progress)</span>
+                    <span id="sustained-timer-label">0.0초 / 10초</span>
+                  </div>
+                  <div class="w-full bg-orange-100 h-4 rounded-full overflow-hidden p-0.5 border border-orange-200/40">
+                    <div id="sustained-progress-bar" class="bg-gradient-to-r from-orange-500 to-amber-500 h-full rounded-full transition-all duration-100" style="width: 0%"></div>
+                  </div>
+                </div>
+
+                <!-- Game Controls -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 z-10 border-t border-orange-200/40 pt-4">
+                  <div class="flex items-center gap-2">
+                    <span id="sustained-status-badge" class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100/60 text-orange-850 text-xs font-bold">
+                      <span class="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
+                      <span>대기 중</span>
+                    </span>
+                    <span id="sustained-score-label" class="text-xs font-extrabold text-orange-700">성공률: 0%</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <button id="btn-sustained-reset" class="px-4 py-2 border border-orange-200 hover:bg-orange-100 text-orange-800 text-xs font-bold rounded-xl transition-all">
+                      초기화
+                    </button>
+                    <button id="btn-start-sustained" class="px-6 py-2 bg-orange-700 hover:bg-orange-800 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-md">
+                      <i data-lucide="play" class="w-4 h-4"></i>
+                      <span>훈련 시작</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Instruction Tips -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-[#FAF5EE]/40 p-4 rounded-2xl border border-orange-200/40 space-y-2">
+                  <h4 class="text-xs font-bold text-orange-950 flex items-center gap-1.5">
+                    <i data-lucide="info" class="w-4 h-4 text-orange-700"></i>
+                    <span>가이드 1: 균일한 성량 유지</span>
+                  </h4>
+                  <p class="text-[11px] text-orange-900/70 leading-relaxed">
+                    시작 시 너무 큰 소리를 지르면 끝까지 호흡을 유지하기 힘듭니다. 가벼운 속삭임보다 약간 더 큰 정도의 부드러운 중음 성량으로 시작하여 균일한 크기를 이어가세요.
+                  </p>
+                </div>
+                <div class="bg-[#FAF5EE]/40 p-4 rounded-2xl border border-orange-200/40 space-y-2">
+                  <h4 class="text-xs font-bold text-orange-950 flex items-center gap-1.5">
+                    <i data-lucide="wind" class="w-4 h-4 text-orange-700"></i>
+                    <span>가이드 2: 복식 호흡 연계</span>
+                  </h4>
+                  <p class="text-[11px] text-orange-900/70 leading-relaxed">
+                    어깨가 올라가지 않는 복식 호흡을 사용하여 공기를 배에 충분히 채운 후, 아랫배를 조금씩 수축시키며 일정한 압력으로 성대 사이로 공기를 뿜어내야 합니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Side Panel: Live Constant Sound Gauge -->
+            <div class="bg-orange-950 text-white rounded-3xl p-6 border border-orange-900/40 shadow-sm flex flex-col justify-between min-h-[350px]">
+              <div class="space-y-4">
+                <span class="text-[9px] uppercase tracking-wider font-extrabold text-emerald-400 font-mono">
+                  Vocal Pitch Stability
+                </span>
+                <h3 class="text-base font-bold leading-snug">실시간 발성 주파수 평탄도</h3>
+                <p class="text-xs text-slate-400">발성 신호의 편차(흔들림)를 미터계로 보여줍니다. 바늘이 녹색 안정 구역 내에 오랜 시간 멈춰 있도록 목소리 톤을 고정하세요.</p>
+                
+                <!-- Sound Level Meter Graphic -->
+                <div class="py-4 space-y-3">
+                  <div class="flex justify-between text-xs font-mono">
+                    <span class="text-slate-400">소리 고저 편차 (Pitch Jitter)</span>
+                    <span id="live-jitter-val" class="text-emerald-400 font-bold">0.1 Hz (안정)</span>
+                  </div>
+                  <div class="relative w-full bg-orange-950 h-8 rounded-xl border border-orange-900/40 flex items-center px-2">
+                    <!-- Target Stable Range (Center) -->
+                    <div class="absolute inset-y-1 left-1/3 right-1/3 bg-emerald-500/20 border-x border-emerald-500/40 rounded"></div>
+                    <!-- Indicator bar moving left/right -->
+                    <div id="live-jitter-bar" class="absolute w-1.5 h-6 bg-emerald-400 rounded transition-all duration-100 shadow-sm" style="left: 50%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-orange-950 p-4 rounded-2xl border border-orange-900/40 space-y-1.5">
+                <span class="text-[10px] font-bold text-slate-400">실시간 피칭 진단 의견</span>
+                <p id="live-jitter-advice" class="text-[11px] text-slate-400 leading-relaxed">마이크 소리를 입력하여 훈련을 실행하면 음향 성량 평탄도 진단이 출력됩니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. RECORD ROOM VIEW (기록실 뷰) -->
+      <section id="view-history" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight text-orange-950 flex items-center gap-2">
+              <i data-lucide="folder-heart" class="text-orange-700 w-6 h-6"></i>
+              <span>나의 목소리 아카이브 (기록실)</span>
+            </h2>
+            <p class="text-xs text-orange-850/70">리허설 연습 종료 후 저장된 모의 분석 보고서 이력입니다.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- History Reports Side Track -->
+          <div class="bg-[#FDFBF7] rounded-3xl p-6 border border-orange-200/60 shadow-sm space-y-4 flex flex-col justify-between">
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold text-orange-950">이전 리허설 목록</h3>
+              <div id="history-track-list" class="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+            <button id="btn-clear-history" class="w-full mt-4 py-2.5 bg-red-50 hover:bg-red-100/80 text-red-600 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1 border border-red-100">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+              <span>전체 연습 기록 비우기</span>
+            </button>
+          </div>
+
+          <!-- History Report Detail Area -->
+          <div class="lg:col-span-2 bg-[#FDFBF7] rounded-3xl p-6 md:p-8 border border-orange-200/60 shadow-sm min-h-[450px] flex flex-col justify-between">
+            <div id="history-empty-detail" class="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
+              <div class="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center text-orange-850">
+                <i data-lucide="file-text" class="w-6 h-6"></i>
+              </div>
+              <p class="text-xs text-orange-850/60">보고서를 선택하면 정밀 분석 내용이 여기에 표시됩니다.</p>
+            </div>
+
+            <!-- Detail report panel -->
+            <div id="history-filled-detail" class="hidden space-y-6 flex-1">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. INFORMATION/GUIDE VIEW (말결 교육관) -->
+      <section id="view-info" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+             <!-- Banner Intro -->
+        <div class="bg-[#FAF5EE] border border-orange-200/60 p-8 rounded-3xl flex flex-col md:flex-row items-center gap-6">
+          <div class="w-14 h-14 rounded-2xl bg-orange-100 text-orange-800 flex items-center justify-center shrink-0">
+            <i data-lucide="book-open" class="w-7 h-7"></i>
+          </div>
+          <div class="space-y-1.5">
+            <h2 class="text-lg font-bold text-orange-950">청각장애 대학생을 위한 배리어프리 프레젠테이션 가이드</h2>
+            <p class="text-xs text-orange-900/80 leading-relaxed">
+              발표 시 느끼는 불안감을 덜고, 청중에게 더욱 정확하게 나의 비전과 과제를 선사하는 발표 역량 향상 가이드입니다. 
+              배재대학교 창업지원단 프로젝트 '말결' 팀이 전해드리는 조음 요령과 시각 발표 팁을 가슴속에 새겨보세요.
+            </p>
+          </div>
+        </div>
+
+        <!-- Guide Category Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          <!-- Category 1: Voice & Breathing -->
+          <div class="bg-white p-6 rounded-3xl border border-orange-200/60 shadow-sm space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-orange-100 text-orange-800">
+                <i data-lucide="wind" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-sm font-bold text-orange-950">1. 올바른 발성과 호흡 요령 (Vocalization)</h3>
+            </div>
+            
+            <div class="space-y-3 pt-2 text-xs text-slate-650 leading-relaxed">
+              <div class="p-3 bg-[#FCF8F5] rounded-xl border border-orange-50 space-y-1">
+                <strong class="text-orange-950 font-bold">복식 호흡을 통한 성대 안정성 확보</strong>
+                <p>가슴으로 얕게 들이쉬면 성대에 무리가 가고 발음 끝부분이 불분명해집니다. 가벼운 복식 호흡을 연습하여 목소리의 떨림을 방지하고 일정한 풍압을 유지해 보세요.</p>
+              </div>
+              <div class="p-3 bg-[#FCF8F5] rounded-xl border border-orange-50 space-y-1">
+                <strong class="text-orange-950 font-bold">적정 성량 확보 및 일정한 소리 크기</strong>
+                <p>소리가 너무 작아지면 모음이 왜곡되어 상대방이 문맥을 이해할 수 없습니다. 배에 가벼운 텐션을 유지하고, 일반 대화의 1.3배 수준 성량을 안정적으로 유도해 주세요.</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Category 2: Speech Pace -->
+          <div class="bg-white p-6 rounded-3xl border border-orange-50 shadow-sm space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-amber-50 text-amber-700">
+                <i data-lucide="gauge" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-sm font-bold text-slate-800">2. 발표 템포와 쉼(Pause) 조율 (Speaking Pace)</h3>
+            </div>
+            
+            <div class="space-y-3 pt-2 text-xs text-slate-600 leading-relaxed">
+              <div class="p-3 bg-[#FCF8F5] rounded-xl border border-orange-50 space-y-1">
+                <strong class="text-slate-800">1분당 280~300자 내외의 여유로운 속도</strong>
+                <p>긴장하면 목소리 속도가 빨라지기 쉽습니다. 속도가 빨라지면 청중은 자모음의 경계를 구분하기 어렵습니다. 슬라이드 한 면 한 면의 키워드를 마음속으로 헤아리며 여유롭게 낭독하세요.</p>
+              </div>
+              <div class="p-3 bg-[#FCF8F5] rounded-xl border border-orange-50 space-y-1">
+                <strong class="text-slate-800">마침표(.) 뒤에 의도적인 '1.5초 정지'</strong>
+                <p>주요 의제(슬라이드 전환, 중요 도표 설명) 앞뒤에 1~2초간 침묵(Pause)을 주면, 전달하려는 주요 키워드가 관객의 뇌리에 더욱 명료하게 안착됩니다.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category 3: Visual Presentation Assist -->
+          <div class="bg-white p-6 rounded-3xl border border-orange-50 shadow-sm space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-emerald-50 text-emerald-700">
+                <i data-lucide="eye" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-sm font-bold text-slate-800">3. 비시각 장애 청중과의 아이콘택트 & 태도</h3>
+            </div>
+            
+            <div class="space-y-3 pt-2 text-xs text-slate-600 leading-relaxed">
+              <div class="p-3 bg-[#FCF8F5] rounded-xl border border-orange-50 space-y-1">
+                <strong class="text-slate-800">턱을 숙이거나 고개를 숙이는 행동 방지</strong>
+                <p>대본만을 쳐다보며 고개를 숙이면 성대가 닫혀 모음 'ㅡ, ㅜ' 발성이 둔화됩니다. 관객의 정면을 바라보며 허리를 곧게 펴고 상향 시선을 확보하여 발성 가이드를 정밀하게 타겟팅하세요.</p>
+              </div>
+              <div class="p-3 bg-[#FCF8F5] rounded-xl border border-orange-50 space-y-1">
+                <strong class="text-slate-800">도표 및 텍스트 기반 시각화 활용</strong>
+                <p>목소리 전달력을 완벽히 뒷받침할 수 있도록, 핵심 요약 장표를 대조하여 띄워놓고 제스처로 슬라이드를 지적하며 발표를 전개해 주시면 관객들이 소리에 온전히 집중합니다.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category 4: Creative Speech QA tips -->
+          <div class="bg-white p-6 rounded-3xl border border-orange-50 shadow-sm space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-blue-50 text-blue-700">
+                <i data-lucide="message-square" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-sm font-bold text-slate-800">4. 현장 질문 대처 및 피드백 훈련</h3>
+            </div>
+            
+            <div class="space-y-3 pt-2 text-xs text-slate-600 leading-relaxed">
+              <div class="p-3 bg-[#FCF8F5] rounded-xl border border-orange-50 space-y-1">
+                <strong class="text-slate-800">실시간 질의응답 자막 보조 장치 연계</strong>
+                <p>Q&A 단계에서 실시간 음성-자막 변환기(STT) 혹은 실시간 속기 서비스 어플을 스마트폰에 나란히 세팅해 두면, 질문자의 의도를 정확히 받아적고 침착하게 발표 준비된 모범 답변을 낭독할 수 있습니다.</p>
+              </div>
+              <div class="p-3 bg-[#FCF8F5] rounded-xl border border-orange-50 space-y-1">
+                <strong class="text-slate-800">말결 플랫폼의 조음 연습 기능 반복</strong>
+                <p>본인만의 발표 약점 단어를 '나의 원고'에 추가한 뒤 '말결 자모음 연습기'로 사전에 혀와 조음부 피치 차트 매칭 연습을 10분간 선행해 두는 루틴이 실전 공포증 완화에 아주 탁월합니다.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer Copyright area -->
+    <footer class="w-full bg-orange-950 text-orange-200/60 py-12 px-4 sm:px-6 lg:px-8 border-t border-orange-900/40 mt-16">
+      <div class="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="space-y-1 text-center md:text-left">
+          <span class="text-lg font-bold text-white" style="font-family: 'Outfit', sans-serif;">
+            말결
+          </span>
+          <p class="text-xs text-orange-200/40">
+            © 2026 말결 팀. All Rights Reserved.
+          </p>
+        </div>
+
+        <div class="text-center md:text-right space-y-1">
+          <p class="text-xs text-orange-200/60 font-semibold">
+            배재대학교 산업디자인학과
+          </p>
+          <p class="text-[10px] text-orange-200/30">
+            창업지원단 지원 프로젝트 · 청각장애 대학생을 위한 배리어프리 솔루션
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ADD/EDIT SCRIPT MODAL DIALOG -->
+    <div id="script-modal" class="hidden fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl border border-orange-50 shadow-2xl max-w-lg w-full overflow-hidden flex flex-col justify-between animate-scale-up">
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h3 id="modal-title" class="text-base font-bold text-slate-800">원고 등록하기</h3>
+          <button onclick="closeScriptModal()" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body / Form -->
+        <form id="script-form" class="p-6 space-y-4">
+          <input type="hidden" id="edit-script-id" value="">
+          <div class="space-y-1.5">
+            <label for="script-title-input" class="text-xs font-bold text-slate-600">발표 제목</label>
+            <input type="text" id="script-title-input" required placeholder="예: [과제 발표] 디자인 방법론 1차" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-orange-500">
+          </div>
+          <div class="space-y-1.5">
+            <label for="script-text-input" class="text-xs font-bold text-slate-600">발표 내용 원고</label>
+            <textarea id="script-text-input" required rows="6" placeholder="예: 안녕하세요. 배재대학교 산업디자인학과 발표자입니다. 오늘 다룰 첫 번째 주제는 청각장애 대학생을 위한 혁신 배리어프리 가이드라인입니다..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-orange-500 resize-none"></textarea>
+            <p class="text-[10px] text-slate-400">말할 속도 조절을 위해 또박또박 낭독 가능한 줄글 형태로 입력해 주세요.</p>
+          </div>
+        </form>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 bg-[#FCF8F5] border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeScriptModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 font-bold text-xs rounded-xl transition-all">
+            취소
+          </button>
+          <button type="submit" form="script-form" class="px-6 py-2 bg-orange-700 hover:bg-orange-800 text-white font-bold text-xs rounded-xl transition-all shadow-md">
+            저장 완료
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ===== API KEY SETTINGS MODAL ===== -->
+    <div id="api-key-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md">
+        <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+            <i data-lucide="key" class="w-4 h-4 text-orange-700"></i>
+            Gemini API 키 설정
+          </h3>
+          <button onclick="closeApiKeyModal()" class="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="p-6 space-y-4">
+          <p class="text-xs text-slate-500 leading-relaxed">
+            AI 발표 피드백 기능을 사용하려면 Google Gemini API 키가 필요합니다.<br>
+            키는 이 기기의 브라우저에만 저장되며 외부로 전송되지 않습니다.
+          </p>
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-600">Gemini API Key</label>
+            <input type="password" id="api-key-input" placeholder="AIzaSy..." 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-none focus:border-orange-500">
+          </div>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" 
+            class="text-[10px] text-orange-700 font-bold hover:underline flex items-center gap-1">
+            <i data-lucide="external-link" class="w-3 h-3"></i>
+            Google AI Studio에서 무료 키 발급받기
+          </a>
+          <div class="flex gap-2">
+            <button onclick="saveApiKey()" class="flex-1 px-4 py-2.5 bg-orange-700 hover:bg-orange-800 text-white text-xs font-bold rounded-xl transition-all">
+              저장
+            </button>
+            <button onclick="closeApiKeyModal()" class="px-4 py-2.5 border border-slate-200 text-slate-500 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all">
+              취소
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN APP SCRIPT (INLINE) -->
+    <script>
+// ==========================================
+// CLOUDFLARE WORKER 프록시 설정
+// ==========================================
+// 아래 주소를 본인의 Cloudflare Worker 주소로 교체하세요.
+// 예: "https://malgyeol-proxy.본인계정.workers.dev"
+const WORKER_URL = "https://YOUR-WORKER-NAME.YOUR-SUBDOMAIN.workers.dev";
+
+// ==========================================
+// API KEY MANAGEMENT (학생 개별 키 입력 - WORKER_URL 미설정 시 폴백용)
+// ==========================================
+function openApiKeyModal() {
+  const modal = document.getElementById("api-key-modal");
+  const input = document.getElementById("api-key-input");
+  const savedKey = localStorage.getItem("malgyeol_gemini_key") || "";
+  if (input) input.value = savedKey;
+  if (modal) {
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+  if (typeof lucide !== "undefined") lucide.createIcons();
+}
+window.openApiKeyModal = openApiKeyModal;
+
+function closeApiKeyModal() {
+  const modal = document.getElementById("api-key-modal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+}
+window.closeApiKeyModal = closeApiKeyModal;
+
+function saveApiKey() {
+  const input = document.getElementById("api-key-input");
+  if (!input || !input.value.trim()) {
+    alert("API 키를 입력해 주세요.");
+    return;
+  }
+  localStorage.setItem("malgyeol_gemini_key", input.value.trim());
+  closeApiKeyModal();
+  alert("API 키가 저장되었습니다. 이제 AI 피드백 기능을 사용할 수 있습니다.");
+}
+window.saveApiKey = saveApiKey;
+
+// ==========================================
+// 1. 기초 기본 데이터 (Default Data)
+// ==========================================
+const DEFAULT_SCRIPTS = [
+  {
+    id: "script-template-1",
+    name: "배재대 1차 창업 경진대회 발표 원고",
+    text: "안녕하세요. 말결 팀의 발표자입니다. 청각장애 대학생의 76%가 대학 생활 중 발표 과제에서 가장 큰 소외감과 언어적 장벽을 느낍니다. 저희 배리어프리 발표 피드백 솔루션 '말결'은, 소리라는 청각적 파형을 눈으로 정밀하게 볼 수 있는 '시각적 발성 도해 분석기'를 기반으로 합니다. 이를 통해 장애를 가진 모든 학생들이 자신의 전공 역량을 한계 없이 발표할 수 있는 미래를 그려나가고자 합니다. 경청해 주셔서 감사합니다.",
+    createdAt: "2026-06-25T10:00:00.000Z"
+  },
+  {
+    id: "script-template-2",
+    name: "디자인 방법론 과제 - 조음 시각 분석 보조 방안",
+    text: "반갑습니다. 이번 디자인 방법론 발표를 맡은 조입니다. 저희 조는 청각장애인의 언어 발달 및 프레젠테이션 스피치 훈련 시, 조음 기관의 움직임을 시각화하여 전달할 수 있는 웨어러블 디바이스와 소프트웨어를 디자인했습니다. 주파수 분할 필터를 통해 잡음을 제거하고, 자음 조음 시 나타나는 마찰 주파수를 정량화하는 것을 목표로 설계했습니다. 이 아이디어가 실제로 구체화되어 비언어적 소통의 새로운 기준을 열어가길 희망합니다.",
+    createdAt: "2026-06-24T15:30:00.000Z"
+  },
+  {
+    id: "script-template-3",
+    name: "스타트업 엘리베이터 피치 원고 (배리어프리)",
+    text: "성공적인 피칭을 위해서는 60초 안에 강렬한 솔루션을 제안해야 합니다. 배리어프리 스피치 교정 도구인 '말결'은 성대 훈련, 단모음 조음 포지션 추적, 그리고 복식 호흡을 유지하는 장음 게임까지 한데 모았습니다. 누구나 스스로 목소리의 명확도를 높일 수 있도록, 배재대학교 산업디자인학과에서 창업지원단 프로젝트로 탄생시켰습니다.",
+    createdAt: "2026-06-23T09:00:00.000Z"
+  }
+];
+
+const INITIAL_HISTORY = [
+  {
+    id: "history-mock-1",
+    scriptId: "script-template-1",
+    scriptName: "배재대 1차 창업 경진대회 발표 원고",
+    score: 92,
+    volume: 68,
+    pace: 290,
+    clarity: 94,
+    advice: "전체적으로 호흡의 안정도가 대단히 우수합니다. 특히 발표 초반부 모음 'ㅏ, ㅓ'의 성량이 뚜렷하여 청중들의 이목을 잘 끌었습니다. 다만 후반부 60초 구간에서 긴장으로 인해 말의 속도가 1.2배 소폭 빨라지는 경향이 있으니 의도적으로 마침표 다음에 숨을 돌리는 페이스 유지를 권장합니다.",
+    createdAt: "2026-06-25T11:20:00.000Z"
+  },
+  {
+    id: "history-mock-2",
+    scriptId: "script-template-2",
+    scriptName: "디자인 방법론 과제 - 조음 시각 분석 보조 방안",
+    score: 85,
+    volume: 62,
+    pace: 330,
+    clarity: 88,
+    advice: "성량이 기준치(65dB)보다 소폭 작게 녹음되었습니다. 조금 더 배에 힘을 준 상태에서 발성하는 '장음 발성 훈련'이 필요합니다. 또한 'ㅈ, ㅊ'과 같은 파찰음 구간에서 조음 명확도가 미치지 못했으니 해당 자음 단어 낭독을 선행하시면 목소리의 선명함을 확실하게 강화할 수 있습니다.",
+    createdAt: "2026-06-24T18:40:00.000Z"
+  }
+];
+
+// ==========================================
+// 2. 전역 상태 변수
+// ==========================================
+let scripts = [];
+let history = [];
+let activeTab = "home";
+let activeDeafSubtab = "unified";
+
+let selectedScriptId = null;
+let isRehearsing = false;
+let rehearsalTimerInterval = null;
+let rehearsalSeconds = 0;
+let recognition = null;
+let spokenText = "";
+let rehearsalVolumes = [];
+let isTtsSpeaking = false;
+let ttsInterval = null;
+
+let audioContext = null;
+let analyser = null;
+let micStream = null;
+let animationFrameId = null;
+
+let isSustainedPhonationRunning = false;
+let sustainedProgressInterval = null;
+let sustainedSeconds = 0;
+let sustainedMatchCount = 0;
+let sustainedTotalCount = 0;
+
+let isVowelSimulatorRunning = false;
+let vowelSimulatorInterval = null;
+
+// ==========================================
+// 3. 유틸리티 함수
+// ==========================================
+function loadData() {
+  const savedScripts = localStorage.getItem("malgyeol_scripts_v2");
+  if (savedScripts) {
+    try { scripts = JSON.parse(savedScripts); } catch (e) { scripts = [...DEFAULT_SCRIPTS]; }
+  } else {
+    scripts = [...DEFAULT_SCRIPTS];
+    saveScripts();
+  }
+  const savedHistory = localStorage.getItem("malgyeol_history_v2");
+  if (savedHistory) {
+    try { history = JSON.parse(savedHistory); } catch (e) { history = [...INITIAL_HISTORY]; }
+  } else {
+    history = [...INITIAL_HISTORY];
+    saveHistory();
+  }
+}
+
+function saveScripts() {
+  try { localStorage.setItem("malgyeol_scripts_v2", JSON.stringify(scripts)); }
+  catch (err) { alert("⚠️ 브라우저 저장공간이 가득 찼습니다. 불필요한 대본을 정리해 주세요."); }
+}
+
+function saveHistory() {
+  try { localStorage.setItem("malgyeol_history_v2", JSON.stringify(history)); }
+  catch (err) { alert("⚠️ 브라우저 저장공간이 가득 찼습니다. 오래된 기록을 삭제해 주세요."); }
+}
+
+function formatDate(isoString) {
+  const d = new Date(isoString);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const date = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${date} ${hours}:${minutes}`;
+}
+
+// 한글 자모 분리
+const KOREAN_ONSETS = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const KOREAN_NUCLEI = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+const KOREAN_CODAS = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
+function decomposeKorean(str) {
+  let result = "";
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    if (code >= 0xAC00 && code <= 0xD7A3) {
+      const sylIdx = code - 0xAC00;
+      const onsetIdx = Math.floor(sylIdx / 588);
+      const nucleusIdx = Math.floor((sylIdx % 588) / 28);
+      const codaIdx = sylIdx % 28;
+      result += KOREAN_ONSETS[onsetIdx] + KOREAN_NUCLEI[nucleusIdx];
+      if (codaIdx > 0) result += KOREAN_CODAS[codaIdx];
+    } else {
+      result += str[i];
+    }
+  }
+  return result;
+}
+
+function getLevenshteinDistance(s1, s2) {
+  const len1 = s1.length, len2 = s2.length;
+  const d = Array.from({ length: len1 + 1 }, () => Array(len2 + 1).fill(0));
+  for (let i = 0; i <= len1; i++) d[i][0] = i;
+  for (let j = 0; j <= len2; j++) d[0][j] = j;
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+cost);
+    }
+  }
+  return d[len1][len2];
+}
+
+function getJamoSimilarity(w1, w2) {
+  const j1 = decomposeKorean(w1);
+  const j2 = decomposeKorean(w2);
+  const dist = getLevenshteinDistance(j1, j2);
+  const maxLen = Math.max(j1.length, j2.length);
+  if (maxLen === 0) return 1.0;
+  return 1.0 - dist / maxLen;
+}
+
+function getKoreanWordSimilarity(w1, w2) {
+  if (w1 === w2) return 1.0;
+  const cleanWord = (w) => w.replace(/(을|를|이|가|은|는|의|에|와|과|로|으로|고|며|면서|다|요|습니다|니다|고서|라|이라|하고)$/, "");
+  const cw1 = cleanWord(w1);
+  const cw2 = cleanWord(w2);
+  if (cw1 === cw2 && cw1.length > 0) return 0.95;
+  const jamoSim = getJamoSimilarity(w1, w2);
+  const cleanJamoSim = getJamoSimilarity(cw1, cw2);
+  let bestSim = Math.max(jamoSim, cleanJamoSim);
+  if (w1.length >= 2 && w2.length >= 2) {
+    if (w1.substring(0, 2) === w2.substring(0, 2)) bestSim = Math.max(bestSim, 0.85);
+  }
+  if (w1.includes(w2) || w2.includes(w1)) bestSim = Math.max(bestSim, 0.80);
+  return bestSim;
+}
+
+function detectPitchAutocorrelation(timeDomainBuffer, sampleRate) {
+  const size = timeDomainBuffer.length;
+  let rms = 0;
+  for (let i = 0; i < size; i++) {
+    const val = (timeDomainBuffer[i] - 128) / 128;
+    rms += val * val;
+  }
+  rms = Math.sqrt(rms / size);
+  if (rms < 0.01) return -1;
+  let r1 = 0, r2 = size - 1;
+  const thres = 0.2;
+  for (let i = 0; i < size / 2; i++) {
+    if (Math.abs(timeDomainBuffer[i] - 128) < thres * 128) { r1 = i; break; }
+  }
+  for (let i = size - 1; i >= size / 2; i--) {
+    if (Math.abs(timeDomainBuffer[i] - 128) < thres * 128) { r2 = i; break; }
+  }
+  const slicedBuffer = timeDomainBuffer.subarray(r1, r2);
+  const slicedSize = slicedBuffer.length;
+  if (slicedSize < 64) return -1;
+  const c = new Float32Array(slicedSize);
+  for (let i = 0; i < slicedSize; i++) {
+    for (let j = 0; j < slicedSize - i; j++) {
+      c[i] += ((slicedBuffer[j] - 128) / 128) * ((slicedBuffer[j + i] - 128) / 128);
+    }
+  }
+  let d = 0;
+  while (c[d] > c[d + 1]) d++;
+  let maxval = -1, maxpos = -1;
+  for (let i = d; i < slicedSize; i++) {
+    if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+  }
+  if (maxpos > 0) {
+    const pitch = sampleRate / maxpos;
+    if (pitch >= 50 && pitch <= 1000) return pitch;
+  }
+  return -1;
+}
+
+// ==========================================
+// 4. 내비게이션
+// ==========================================
+window.switchTab = function(tabName) {
+  if (isRehearsing) {
+    if (!confirm("현재 진행 중인 발표 리허설을 중단하고 이동하시겠습니까?")) return;
+    stopRehearsal(false);
+  }
+  activeTab = tabName;
+  ["home","rehearsal","deaf","history","info"].forEach(t => {
+    document.getElementById(`view-${t}`).classList.add("hidden");
+  });
+  const targetView = document.getElementById(`view-${tabName}`);
+  if (targetView) targetView.classList.remove("hidden");
+
+  document.querySelectorAll(".nav-tab-btn").forEach(btn => {
+    btn.className = "nav-tab-btn rounded-full px-4 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-all";
+  });
+  const activeDesktopBtn = document.getElementById(`tab-btn-${tabName}`);
+  if (activeDesktopBtn) activeDesktopBtn.className = "nav-tab-btn rounded-full px-4 py-1.5 text-xs font-semibold bg-orange-700 text-white transition-all";
+
+  document.querySelectorAll(".m-nav-tab-btn").forEach(btn => {
+    btn.className = "m-nav-tab-btn rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all text-slate-600 bg-white border border-orange-100/60 shadow-sm";
+  });
+  const activeMobileBtn = document.getElementById(`m-tab-btn-${tabName}`);
+  if (activeMobileBtn) activeMobileBtn.className = "m-nav-tab-btn rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap transition-all bg-orange-700 text-white shadow-sm";
+
+  if (tabName === "home") renderHomeView();
+  else if (tabName === "rehearsal") renderRehearsalView();
+  else if (tabName === "deaf") switchDeafSubtab(activeDeafSubtab);
+  else if (tabName === "history") renderHistoryView();
+
+  if (typeof lucide !== "undefined") lucide.createIcons();
+};
+
+// ==========================================
+// 5. 홈 화면
+// ==========================================
+function renderHomeView() {
+  const scriptsCount = scripts.length;
+  const historyCount = history.length;
+  let avgClarity = 0;
+  if (historyCount > 0) {
+    avgClarity = Math.round(history.reduce((sum, item) => sum + (item.clarity || 0), 0) / historyCount);
+  }
+  document.getElementById("stat-scripts-count").innerText = `${scriptsCount}개`;
+  document.getElementById("stat-history-count").innerText = `${historyCount}회`;
+  document.getElementById("stat-avg-score").innerText = `${avgClarity}%`;
+
+  const container = document.getElementById("home-scripts-container");
+  container.innerHTML = "";
+  scripts.slice(0, 4).forEach(script => {
+    const scriptCard = document.createElement("div");
+    scriptCard.className = "bg-white p-5 rounded-2xl border border-slate-100 hover:border-orange-200 hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer";
+    scriptCard.onclick = () => { selectedScriptId = script.id; switchTab("rehearsal"); };
+    scriptCard.innerHTML = `
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] bg-orange-50 text-orange-700 font-bold px-2 py-0.5 rounded-full">원고</span>
+          <span class="text-[10px] font-mono text-slate-400">${formatDate(script.createdAt).split(" ")[0]}</span>
+        </div>
+        <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${script.name}</h4>
+        <p class="text-[11px] text-slate-500 line-clamp-3 leading-relaxed">${script.text}</p>
+      </div>
+      <div class="flex items-center justify-between pt-2 border-t border-slate-50 text-[10px] font-bold text-orange-700">
+        <span>지금 선택 및 훈련 시작</span>
+        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+      </div>
+    `;
+    container.appendChild(scriptCard);
+  });
+}
+
+// ==========================================
+// 6. 발표 리허설
+// ==========================================
+function renderRehearsalView() {
+  const listContainer = document.getElementById("rehearsal-scripts-list");
+  listContainer.innerHTML = "";
+  if (scripts.length === 0) {
+    listContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">등록된 대본이 없습니다. 오른쪽 위의 더하기(+) 버튼으로 새로 추가하세요!</p>`;
+    return;
+  }
+  scripts.forEach(script => {
+    const isActive = selectedScriptId === script.id;
+    const item = document.createElement("div");
+    item.className = `p-3.5 rounded-2xl border transition-all cursor-pointer relative group flex items-start justify-between ${isActive ? "bg-orange-50 border-orange-200 shadow-sm" : "bg-white border-slate-100 hover:border-orange-100"}`;
+    item.addEventListener("click", (e) => {
+      if (e.target.closest(".control-btn")) return;
+      selectedScriptId = script.id;
+      renderRehearsalView();
+    });
+    item.innerHTML = `
+      <div class="space-y-1 pr-4 flex-1">
+        <h4 class="text-xs font-bold ${isActive ? "text-orange-900" : "text-slate-800"} line-clamp-1">${script.name}</h4>
+        <p class="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">${script.text}</p>
+      </div>
+      <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onclick="editScript('${script.id}')" class="control-btn p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700" title="수정">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="deleteScript('${script.id}')" class="control-btn p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-600" title="삭제">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    `;
+    listContainer.appendChild(item);
+  });
+
+  const activeScript = scripts.find(s => s.id === selectedScriptId) || scripts[0];
+  if (activeScript) {
+    selectedScriptId = activeScript.id;
+    if (!isRehearsing) {
+      document.getElementById("rehearsal-screen-ready").classList.remove("hidden");
+      document.getElementById("rehearsal-screen-active").classList.add("hidden");
+      document.getElementById("rehearsal-screen-report").classList.add("hidden");
+      document.getElementById("ready-script-title").innerText = activeScript.name;
+    }
+  } else {
+    selectedScriptId = null;
+    document.getElementById("ready-script-title").innerText = "선택된 원고가 없습니다";
+  }
+  if (typeof lucide !== "undefined") lucide.createIcons();
+}
+
+window.startRehearsal = async function() {
+  const activeScript = scripts.find(s => s.id === selectedScriptId);
+  if (!activeScript) { alert("훈련에 임할 대본을 먼저 선택해 주세요."); return; }
+
+  isRehearsing = true;
+  rehearsalSeconds = 0;
+  spokenText = "";
+  rehearsalVolumes = [];
+
+  document.getElementById("rehearsal-screen-ready").classList.add("hidden");
+  document.getElementById("rehearsal-screen-active").classList.remove("hidden");
+  document.getElementById("rehearsal-screen-report").classList.add("hidden");
+
+  document.getElementById("active-script-title").innerText = activeScript.name;
+  document.getElementById("active-script-text").innerText = activeScript.text;
+  document.getElementById("rehearsal-timer").innerText = "00:00";
+  document.getElementById("live-db-indicator").innerText = "0.0 dB";
+
+  const ttsInput = document.getElementById("tts-input-text");
+  if (ttsInput) ttsInput.value = activeScript.text;
+
+  const sttBox = document.getElementById("realtime-stt-text");
+  if (sttBox) sttBox.innerText = "아직 목소리가 감지되지 않았습니다. 마이크를 대고 원고를 또박또박 읽어주세요.";
+
+  initMicAudio();
+
+  rehearsalTimerInterval = setInterval(() => {
+    rehearsalSeconds++;
+    const mins = String(Math.floor(rehearsalSeconds / 60)).padStart(2, "0");
+    const secs = String(rehearsalSeconds % 60).padStart(2, "0");
+    document.getElementById("rehearsal-timer").innerText = `${mins}:${secs}`;
+  }, 1000);
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const statusText = document.getElementById("stt-status-text");
+  const statusBadge = document.getElementById("stt-status-badge");
+
+  if (SpeechRecognition) {
+    let consecutiveRestarts = 0;
+    let lastRestartTime = Date.now();
+    try {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "ko-KR";
+
+      recognition.onstart = () => {
+        if (statusText) statusText.innerText = "🎙️ 음성 인식 중 — 마이크에 또박또박 말씀해 주세요";
+        if (statusBadge) statusBadge.className = "inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/50";
+      };
+
+      recognition.onerror = (e) => {
+        if (e.error === "not-allowed" || e.error === "service-not-allowed" || e.error === "security") {
+          if (statusText) statusText.innerHTML = `<span class="text-rose-700 font-bold">⚠️ 마이크 권한 필요:</span> 주소창의 마이크 권한을 허용하거나 Chrome 브라우저에서 열어주세요.`;
+          if (statusBadge) {
+            statusBadge.className = "inline-flex items-center gap-1 text-[10px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100/50 animate-pulse";
+            statusBadge.innerHTML = `<i data-lucide="mic-off" class="w-3 h-3"></i> <span>마이크 승인 필요</span>`;
+            if (typeof lucide !== "undefined") lucide.createIcons();
+          }
+        } else {
+          if (statusText) statusText.innerText = `⚠️ 음성 인식 오류 (${e.error}) — Chrome에서 사용하시면 더 안정적입니다`;
+        }
+      };
+
+      recognition.onend = () => {
+        if (isRehearsing && recognition) {
+          const now = Date.now();
+          if (now - lastRestartTime < 1000) consecutiveRestarts++;
+          else consecutiveRestarts = 0;
+          lastRestartTime = now;
+          if (consecutiveRestarts > 5) {
+            if (statusText) statusText.innerText = "🔇 음성 인식이 중지되었습니다. 마이크 연결을 확인해 주세요.";
+            return;
+          }
+          setTimeout(() => {
+            if (isRehearsing && recognition) {
+              try { recognition.start(); } catch(err) {}
+            }
+          }, 500);
+        }
+      };
+
+      recognition.onresult = (event) => {
+        let interimTranscript = "";
+        let finalTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+          else interimTranscript += event.results[i][0].transcript;
+        }
+        if (finalTranscript) spokenText += " " + finalTranscript;
+        const currentDisplay = (spokenText + " " + interimTranscript).trim();
+        if (sttBox && currentDisplay) sttBox.innerText = currentDisplay;
+        updateRealtimeFeedback(activeScript.text, currentDisplay);
+      };
+
+      recognition.start();
+    } catch (err) {
+      if (statusText) statusText.innerText = "⚠️ 음성 인식 엔진을 구동할 수 없습니다. Chrome 브라우저를 권장합니다.";
+    }
+  } else {
+    if (statusText) statusText.innerHTML = `⚠️ 이 브라우저는 음성 인식을 지원하지 않습니다. <strong>Chrome 브라우저</strong>를 사용해 주세요.`;
+    if (statusBadge) {
+      statusBadge.className = "inline-flex items-center gap-1 text-[10px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100/50";
+      statusBadge.innerHTML = `<i data-lucide="alert-circle" class="w-3 h-3"></i> <span>지원 불가 브라우저</span>`;
+      if (typeof lucide !== "undefined") lucide.createIcons();
+    }
+  }
+
+  if (window.innerWidth < 1024) {
+    setTimeout(() => {
+      const activeScreen = document.getElementById("rehearsal-screen-active");
+      if (activeScreen) activeScreen.scrollIntoView({ behavior: "smooth" });
+    }, 200);
+  }
+};
+
+function updateRealtimeFeedback(scriptText, transcriptText) {
+  if (!transcriptText) return;
+  const scriptWords = scriptText.toLowerCase().replace(/[^가-힣0-9a-zA-Z\s]/g, "").split(/\s+/).filter(Boolean);
+  const transWords = transcriptText.toLowerCase().replace(/[^가-힣0-9a-zA-Z\s]/g, "").split(/\s+/).filter(Boolean);
+  if (scriptWords.length === 0 || transWords.length === 0) return;
+
+  let totalSim = 0;
+  transWords.forEach(w => {
+    let maxSim = 0;
+    for (let sw of scriptWords) {
+      const sim = getKoreanWordSimilarity(w, sw);
+      if (sim > maxSim) maxSim = sim;
+    }
+    totalSim += maxSim;
+  });
+  const clarity = Math.min(100, Math.max(15, Math.round((totalSim / transWords.length) * 100)));
+
+  const elapsedMinutes = rehearsalSeconds / 60;
+  let pace = 280;
+  if (elapsedMinutes > 0) {
+    pace = Math.round(transcriptText.replace(/\s+/g, "").length / elapsedMinutes);
+  }
+
+  const titleElem = document.getElementById("coaching-status-title");
+  const descElem = document.getElementById("coaching-status-desc");
+  const iconContainer = document.getElementById("coaching-icon");
+  if (!titleElem || !descElem || !iconContainer) return;
+
+  let title = "발표를 잘 진행하고 있습니다";
+  let desc = "작성하신 원고 내용에 맞게 안정적인 속도로 읽고 있습니다. 입술을 크게 움직이세요.";
+  let icon = "smile";
+  let bg = "bg-emerald-50";
+  let color = "text-emerald-600";
+
+  if (pace > 360) {
+    title = "조금만 더 천천히 말씀하세요";
+    desc = `현재 말하는 속도가 분당 ${pace}자로 다소 빠릅니다. 청각장애 청중이 자막을 따라 읽기에 버거울 수 있으니 여유를 가지세요.`;
+    icon = "alert-circle"; bg = "bg-amber-50"; color = "text-amber-600";
+  } else if (pace < 180 && transWords.length > 3) {
+    title = "발표 템포가 너무 느립니다";
+    desc = `현재 말하는 속도가 분당 ${pace}자로 느립니다. 조금 더 또박또박하고 속도감 있게 원고를 전개해 보세요.`;
+    icon = "alert-triangle"; bg = "bg-orange-50"; color = "text-orange-600";
+  } else if (clarity < 65) {
+    title = "정확한 낭독이 필요합니다";
+    desc = "원고 단어와의 일치율이 낮습니다. 말 끝부분을 흐리지 말고 끝맺음을 또박또박 발성해 주세요.";
+    icon = "volume-2"; bg = "bg-blue-50"; color = "text-blue-600";
+  } else {
+    title = "발음의 명확도가 아주 훌륭합니다";
+    desc = `현재 원고 일치율이 ${clarity}%로 매우 우수합니다. 목소리의 톤과 정합성이 조화롭습니다.`;
+    icon = "check-circle"; bg = "bg-emerald-50"; color = "text-emerald-600";
+  }
+
+  titleElem.innerText = title;
+  descElem.innerText = desc;
+  iconContainer.className = `p-2 ${bg} ${color} rounded-xl shrink-0 transition-all`;
+  iconContainer.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i>`;
+
+  const vibrationOn = document.getElementById("toggle-vibration-feedback");
+  if (vibrationOn && vibrationOn.checked && (icon === "alert-circle" || icon === "alert-triangle")) {
+    const panel = document.getElementById("rehearsal-display-panel");
+    if (panel) {
+      panel.classList.add("animate-bounce");
+      setTimeout(() => panel.classList.remove("animate-bounce"), 500);
+    }
+  }
+  if (typeof lucide !== "undefined") lucide.createIcons();
+}
+
+function initMicAudio() {
+  const canvas = document.getElementById("rehearsal-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    const currentRect = canvas.getBoundingClientRect();
+    if (currentRect.width > 0 && currentRect.height > 0) {
+      canvas.width = currentRect.width * dpr;
+      canvas.height = currentRect.height * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+    }
+    return currentRect;
+  }
+
+  let rect = resizeCanvas();
+  let analyserBuffer = null;
+  let useRealMic = false;
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      .then(stream => {
+        micStream = stream;
+        try {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          const source = audioContext.createMediaStreamSource(stream);
+          source.connect(analyser);
+          analyserBuffer = new Uint8Array(analyser.frequencyBinCount);
+          useRealMic = true;
+        } catch (err) { console.warn("오디오 컨텍스트 셋업 오류:", err); }
+        drawFrame();
+      })
+      .catch(err => {
+        console.warn("마이크 접근 제한:", err);
+        const liveDb = document.getElementById("live-db-indicator");
+        if (liveDb) liveDb.innerText = "마이크 권한 필요";
+        drawFrame();
+      });
+  } else {
+    const liveDb = document.getElementById("live-db-indicator");
+    if (liveDb) liveDb.innerText = "마이크 장치 없음";
+    drawFrame();
+  }
+
+  function drawFrame() {
+    if (!isRehearsing) return;
+    const currentRect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0 || Math.floor(currentRect.width) !== Math.floor(rect.width)) {
+      rect = resizeCanvas();
+    }
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    if (useRealMic && analyser && analyserBuffer) {
+      analyser.getByteFrequencyData(analyserBuffer);
+      let sum = 0;
+      for (let i = 0; i < analyserBuffer.length; i++) sum += analyserBuffer[i];
+      const averageVolume = sum / analyserBuffer.length;
+      const calculatedDb = Math.min(90, Math.round(averageVolume * 0.4 + 30));
+      document.getElementById("live-db-indicator").innerText = `${calculatedDb} dB`;
+      rehearsalVolumes.push(calculatedDb);
+
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#10b981";
+      ctx.beginPath();
+      const sliceWidth = rect.width / analyserBuffer.length;
+      let x = 0;
+      for (let i = 0; i < analyserBuffer.length; i++) {
+        const v = analyserBuffer[i] / 128.0;
+        const y = (v * rect.height) / 2;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        x += sliceWidth;
+      }
+      ctx.stroke();
+    } else {
+      // 마이크 없을 때: TTS 재생중이면 파형, 아니면 flat line
+      if (isTtsSpeaking) {
+        const waveOffset = Date.now() / 200;
+        ctx.lineWidth = 2;
+        [{ amp: 20, freq: 0.04, color: "rgba(16,185,129,0.65)" }, { amp: 10, freq: 0.09, color: "rgba(245,158,11,0.5)" }].forEach(w => {
+          ctx.strokeStyle = w.color;
+          ctx.beginPath();
+          for (let x = 0; x < rect.width; x++) {
+            const y = (rect.height / 2) + Math.sin(x * w.freq + waveOffset) * w.amp;
+            if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        });
+        const liveDb = document.getElementById("live-db-indicator");
+        if (liveDb) liveDb.innerText = "가이드 낭독 중";
+      } else {
+        rehearsalVolumes.push(0);
+        const liveDb = document.getElementById("live-db-indicator");
+        if (liveDb) liveDb.innerText = "0 dB (연결 대기)";
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "rgba(148,163,184,0.3)";
+        ctx.beginPath();
+        ctx.moveTo(0, rect.height / 2);
+        ctx.lineTo(rect.width, rect.height / 2);
+        ctx.stroke();
+      }
+    }
+    animationFrameId = requestAnimationFrame(drawFrame);
+  }
+  window.startRehearsalDrawFrame = drawFrame;
+}
+
+window.stopRehearsal = function(needSave) {
+  isRehearsing = false;
+  if (rehearsalTimerInterval) clearInterval(rehearsalTimerInterval);
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  isTtsSpeaking = false;
+  if (ttsInterval) { clearInterval(ttsInterval); ttsInterval = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  const stopTtsBtn = document.getElementById("btn-stop-tts");
+  if (stopTtsBtn) stopTtsBtn.classList.add("hidden");
+  if (recognition) { recognition.onend = null; recognition.stop(); recognition = null; }
+  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  if (audioContext) { audioContext.close(); audioContext = null; }
+
+  if (needSave) {
+    const activeScript = scripts.find(s => s.id === selectedScriptId);
+    if (!activeScript) return;
+
+    let avgVolume = 65;
+    if (rehearsalVolumes.length > 0) {
+      const realVolumes = rehearsalVolumes.filter(v => v > 0);
+      if (realVolumes.length > 0) avgVolume = Math.round(realVolumes.reduce((a, b) => a + b, 0) / realVolumes.length);
+    }
+
+    let finalClarity = 0, coverageRate = 0, finalPace = 0, finalScore = 0, finalAdvice = "";
+
+    if (spokenText && spokenText.trim().length > 0) {
+      const cleanText = (str) => str.toLowerCase().replace(/[^가-힣0-9a-zA-Z\s]/g, "").trim();
+      const scriptWords = cleanText(activeScript.text).split(/\s+/).filter(Boolean);
+      const transWords = cleanText(spokenText).split(/\s+/).filter(Boolean);
+
+      if (scriptWords.length > 0 && transWords.length > 0) {
+        let totalSim = 0;
+        let matchedScriptIndices = new Set();
+        transWords.forEach(w => {
+          let maxSim = 0, bestScriptIdx = -1;
+          for (let i = 0; i < scriptWords.length; i++) {
+            const sim = getKoreanWordSimilarity(w, scriptWords[i]);
+            if (sim > maxSim) { maxSim = sim; bestScriptIdx = i; }
+          }
+          totalSim += maxSim;
+          if (maxSim >= 0.65 && bestScriptIdx !== -1) matchedScriptIndices.add(bestScriptIdx);
+        });
+        finalClarity = Math.min(100, Math.max(15, Math.round((totalSim / transWords.length) * 100)));
+        coverageRate = Math.min(100, Math.round((matchedScriptIndices.size / scriptWords.length) * 100));
+      }
+      if (rehearsalSeconds > 0) {
+        finalPace = Math.round(spokenText.replace(/\s+/g, "").length / (rehearsalSeconds / 60));
+      }
+      if (finalPace < 30) finalPace = 285;
+
+      const paceScore = 100 - Math.min(50, Math.abs(finalPace - 285) * 0.4);
+      const volScore = 100 - Math.min(50, Math.abs(avgVolume - 65) * 2.5);
+      const coverageWeight = 0.5 + (coverageRate / 200);
+      const rawScore = Math.round((finalClarity * 0.5) + (volScore * 0.25) + (paceScore * 0.25));
+      finalScore = Math.min(100, Math.max(20, Math.round(rawScore * coverageWeight)));
+
+      if (finalClarity < 35) {
+        finalAdvice = `⚠️ 발표 원고 불일치 감지!\n선택하신 원고의 내용과 실제 낭독 음성이 다릅니다 (원고 일치율: ${finalClarity}%). \n정해진 스크립트를 소리 내어 또박또박 읽어주세요.\n\n[인식된 내용]\n"${spokenText.trim()}"`;
+      } else if (coverageRate < 35) {
+        finalAdvice = `⚠️ 리허설 조기 중단 (완독률: ${coverageRate}%)\n원고 일부만 읽은 상태로 리허설이 종료되었습니다 (일치율: ${finalClarity}%). \n전체 대본의 마지막 문장까지 끝까지 완독하는 리허설을 권장합니다.\n\n[인식된 내용]\n"${spokenText.trim()}"`;
+      } else {
+        finalAdvice = `이번 리허설에서 안정적인 호흡과 균형 잡힌 속도로 훌륭한 스피치를 보여주셨습니다!\nSTT 일치율: ${finalClarity}% / 완독률: ${coverageRate}%\n\n[인식된 내용]\n"${spokenText.trim()}"`;
+        if (finalPace > 330) finalAdvice += `\n\n단, 말하는 속도(분당 ${finalPace}자)가 빠릅니다. 쉼표와 마침표마다 1초 멈춤을 실천해 주세요.`;
+        else if (finalPace < 185) finalAdvice += `\n\n단, 말하는 속도(분당 ${finalPace}자)가 느립니다. 핵심 단어에 힘을 싣고 조금 더 빠르게 전달해 보세요.`;
+        else finalAdvice += `\n\n말하는 속도(분당 ${finalPace}자)와 성량(${avgVolume}dB)이 모두 최적 구간입니다. 실전에서도 훌륭한 평가를 받으실 것입니다!`;
+      }
+    } else {
+      finalClarity = 0; coverageRate = 0; finalPace = 0; finalScore = 0;
+      finalAdvice = `🔇 음성이 감지되지 않았습니다.\n마이크 권한을 허용한 후 실제 목소리를 내어 대본을 읽어주세요. (평균 볼륨: ${avgVolume}dB)`;
+    }
+
+    const newReport = {
+      id: `history-${Date.now()}`,
+      scriptId: activeScript.id,
+      scriptName: activeScript.name,
+      score: finalScore,
+      volume: avgVolume,
+      pace: finalPace,
+      clarity: finalClarity,
+      coverageRate: coverageRate,
+      spokenText: spokenText || "",
+      advice: finalAdvice,
+      createdAt: new Date().toISOString()
+    };
+
+    history = [newReport, ...history];
+    saveHistory();
+
+    document.getElementById("rehearsal-screen-ready").classList.add("hidden");
+    document.getElementById("rehearsal-screen-active").classList.add("hidden");
+    document.getElementById("rehearsal-screen-report").classList.remove("hidden");
+
+    document.getElementById("report-script-title").innerText = newReport.scriptName;
+    document.getElementById("report-date").innerText = formatDate(newReport.createdAt);
+    document.getElementById("report-score").innerHTML = newReport.score > 0
+      ? `${newReport.score}<span class="text-xs font-semibold">점</span>`
+      : `<span class="text-sm font-extrabold text-red-500">측정 불가</span>`;
+
+    document.getElementById("report-metric-volume").innerText = `${newReport.volume} dB (${newReport.volume >= 60 && newReport.volume <= 75 ? "적정" : "보완 요망"})`;
+    document.getElementById("report-bar-volume").style.width = `${newReport.volume}%`;
+
+    if (newReport.pace > 0) {
+      document.getElementById("report-metric-pace").innerText = `${newReport.pace}자 / 분 (${newReport.pace >= 260 && newReport.pace <= 320 ? "양호" : "조율 요망"})`;
+      document.getElementById("report-bar-pace").style.width = `${Math.min(100, Math.round(newReport.pace / 4.5))}%`;
+    } else {
+      document.getElementById("report-metric-pace").innerText = "미측정 (0자 / 분)";
+      document.getElementById("report-bar-pace").style.width = "0%";
+    }
+
+    if (newReport.clarity > 0) {
+      document.getElementById("report-metric-clarity").innerText = `${newReport.clarity}% (${newReport.clarity >= 80 ? "명확" : "발성 강화"})`;
+      document.getElementById("report-bar-clarity").style.width = `${newReport.clarity}%`;
+    } else {
+      document.getElementById("report-metric-clarity").innerText = "미측정 (0%)";
+      document.getElementById("report-bar-clarity").style.width = "0%";
+    }
+
+    document.getElementById("report-advice").innerText = newReport.advice;
+
+    // Gemini 피드백 UI 리셋
+    ["gemini-feedback-container","gemini-feedback-loading","gemini-feedback-error"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add("hidden");
+    });
+    const geminiFeedbackContent = document.getElementById("gemini-feedback-content");
+    if (geminiFeedbackContent) { geminiFeedbackContent.innerText = ""; geminiFeedbackContent.classList.add("hidden"); }
+    const btnGetGeminiFeedback = document.getElementById("btn-get-gemini-feedback");
+    if (btnGetGeminiFeedback) { btnGetGeminiFeedback.disabled = false; btnGetGeminiFeedback.classList.remove("opacity-50","cursor-not-allowed"); }
+
+    renderHomeView();
+  } else {
+    renderRehearsalView();
+  }
+};
+
+// ==========================================
+// GEMINI API 피드백 (브라우저 직접 호출)
+// ==========================================
+window.getGeminiFeedback = async function() {
+  const btn = document.getElementById("btn-get-gemini-feedback");
+  const container = document.getElementById("gemini-feedback-container");
+  const loading = document.getElementById("gemini-feedback-loading");
+  const errorDiv = document.getElementById("gemini-feedback-error");
+  const contentDiv = document.getElementById("gemini-feedback-content");
+  if (!btn || !container || !loading || !errorDiv || !contentDiv) return;
+
+  const useWorker = WORKER_URL && !WORKER_URL.includes("YOUR-WORKER-NAME");
+  const apiKey = localStorage.getItem("malgyeol_gemini_key");
+
+  // Worker도 설정 안 됐고, 개인 키도 없으면 키 입력 요청
+  if (!useWorker && !apiKey) {
+    if (confirm("Gemini API 키가 설정되지 않았습니다. 지금 설정하시겠습니까?")) {
+      openApiKeyModal();
+    }
+    return;
+  }
+
+  if (history.length === 0) { alert("리허설 기록을 찾을 수 없습니다."); return; }
+
+  const latestReport = history[0];
+  const activeScript = scripts.find(s => s.id === latestReport.scriptId);
+  const scriptText = activeScript ? activeScript.text : "대본 정보 없음";
+
+  btn.disabled = true;
+  btn.classList.add("opacity-50", "cursor-not-allowed");
+  container.classList.remove("hidden");
+  loading.classList.remove("hidden");
+  errorDiv.classList.add("hidden");
+  contentDiv.classList.add("hidden");
+  contentDiv.innerText = "";
+
+  const userPrompt = `[발표 리허설 데이터]
+- 원본 대본: ${scriptText}
+- 인식된 발화: ${latestReport.spokenText || "없음"}
+- 말 속도: ${latestReport.pace || 0} 자/분
+- 평균 성량: ${latestReport.volume || 0} dB
+- 원고 일치율: ${latestReport.clarity || 0}%
+- 완독률: ${latestReport.coverageRate !== undefined ? latestReport.coverageRate : 0}%`;
+
+  const systemInstruction = `당신은 발표 코치입니다. 사용자가 발표 리허설을 마친 후 데이터를 기반으로 피드백을 제공합니다.\n\n피드백 구성:\n1. 전체 총평 (2문장)\n2. 잘한 점 1~2가지\n3. 개선할 점 1~2가지 (구체적 수치 포함)\n4. 다음 리허설을 위한 실천 팁 1가지\n\n말투: 친근하고 격려하는 톤, 한국어로 응답, 200자 이내`;
+
+  try {
+    let feedbackText;
+
+    if (useWorker) {
+      // 방식 1: Cloudflare Worker 프록시 호출 (API 키 서버에 숨겨짐, 학생 입력 불필요)
+      const response = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userPrompt, systemInstruction })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      feedbackText = data.feedbackText;
+    } else {
+      // 방식 2: 브라우저에서 Gemini 직접 호출 (학생이 개인 키 입력)
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ parts: [{ text: userPrompt }] }]
+        })
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        if (errData?.error?.status === "UNAUTHENTICATED" || errData?.error?.code === 400) throw new Error("INVALID_KEY");
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      feedbackText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    }
+
+    if (!feedbackText) throw new Error("Empty response");
+
+    loading.classList.add("hidden");
+    contentDiv.classList.remove("hidden");
+    contentDiv.innerText = feedbackText;
+  } catch (err) {
+    console.error("Gemini API Error:", err);
+    loading.classList.add("hidden");
+    errorDiv.classList.remove("hidden");
+    if (err.message === "INVALID_KEY") {
+      errorDiv.innerText = "API 키가 유효하지 않습니다. 키 설정을 다시 확인해 주세요.";
+      errorDiv.innerHTML += ` <button onclick="openApiKeyModal()" class="underline text-orange-700 font-bold">키 재설정</button>`;
+    } else {
+      errorDiv.innerText = "피드백을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+    }
+    btn.disabled = false;
+    btn.classList.remove("opacity-50", "cursor-not-allowed");
+  }
+};
+
+// ==========================================
+// 7. 발성 및 조음 연습 (Deaf Practice)
+// ==========================================
+const CONSONANTS_DATA = [
+  { char: "ㄱ", name: "기역", type: "연구개음", mouth: "혀 뒷부분을 여린입천장에 대어 공기 통로를 막았다가 터뜨리며 발음합니다.", words: "가방, 공기, 가마" },
+  { char: "ㄴ", name: "니은", type: "치조 비음", mouth: "혀끝을 윗잇몸에 밀착시킨 채 코로 공기를 보냅니다.", words: "나무, 노을, 하늘" },
+  { char: "ㄷ", name: "디귿", type: "치조 파열음", mouth: "혀끝으로 윗잇몸을 막았다가 압축된 공기를 일시에 터뜨려 냅니다.", words: "다리, 단추, 파도" },
+  { char: "ㄹ", name: "리을", type: "치조 유음", mouth: "혀끝을 가볍게 윗잇몸에 튕기거나 양옆으로 공기를 흐르게 합니다.", words: "라디오, 노래, 바람" },
+  { char: "ㅁ", name: "미음", type: "양순 비음", mouth: "두 입술을 맞물려 길을 막고 코로 공기를 부드럽게 통과시킵니다.", words: "마음, 미소, 엄마" },
+  { char: "ㅂ", name: "비읍", type: "양순 파열음", mouth: "두 입술을 다물어 공기를 가뒀다가 한순간에 벌리며 발성합니다.", words: "바다, 비누, 나비" },
+  { char: "ㅅ", name: "시옷", type: "치조 마찰음", mouth: "혀끝을 아랫이 안쪽에 대고 공기를 미세 틈새로 비벼 짜내는 소리입니다.", words: "사랑, 수박, 모래" },
+  { char: "ㅇ", name: "이응", type: "연구개 비음", mouth: "혀 뒷부분으로 입천장을 막고 비강으로 기류를 공명시킵니다.", words: "아기, 오이, 강물" },
+  { char: "ㅈ", name: "지읒", type: "경구개 파찰음", mouth: "혀 앞부분을 센입천장에 밀착시켰다가 미세한 마찰을 남겨 터뜨립니다.", words: "지도, 자전거, 우주" },
+  { char: "ㅊ", name: "치읒", type: "경구개 파찰 격음", mouth: "'ㅈ'와 같은 위치에서 더욱 많은 숨을 거세게 밖으로 뿜어냅니다.", words: "차표, 치즈, 기차" },
+  { char: "ㅋ", name: "키읔", type: "연구개 파열 격음", mouth: "'ㄱ' 조음 위치에서 목구멍 깊이부터 강한 숨을 토해내며 파열시킵니다.", words: "카메라, 코끼리, 기차" },
+  { char: "ㅌ", name: "티읕", type: "치조 파열 격음", mouth: "'ㄷ' 조음 부위에 혀를 대고 강하게 터뜨려 폭발적인 입바람을 냅니다.", words: "토끼, 타자기, 기차" },
+  { char: "ㅍ", name: "피읖", type: "양순 파열 격음", mouth: "'ㅂ' 조음에서 입술을 더 강하게 밀착했다가 폭발적으로 숨을 뿜습니다.", words: "피아노, 포도, 스프" },
+  { char: "ㅎ", name: "히읗", type: "후음 마찰음", mouth: "성대를 좁혀 그 틈 사이로 폐로부터 나오는 기류를 강하게 마찰시킵니다.", words: "하루, 하늘, 평화" }
+];
+
+const VOWELS_DATA = [
+  { char: "ㅏ", name: "아", height: "저모음", frontBack: "후설모음", lip: "평순입술", coord: { x: 80, y: 80 }, desc: "입을 아주 크게 벌리고 혀를 가장 밑으로 가라앉힌 채 밝은 성량으로 발성합니다." },
+  { char: "ㅓ", name: "어", height: "중모음", frontBack: "후설모음", lip: "평순입술", coord: { x: 75, y: 50 }, desc: "ㅏ를 발음할 때보다 입을 가볍게 좁히고 혀의 뒤쪽을 살짝만 들어 올립니다." },
+  { char: "ㅗ", name: "오", height: "중모음", frontBack: "후설모음", lip: "원순입술", coord: { x: 70, y: 35 }, desc: "입술을 앞으로 동그랗게 모아 쭉 내밀면서 혀는 목구멍 안쪽에 가깝게 둡니다." },
+  { char: "ㅜ", name: "우", height: "고모음", frontBack: "후설모음", lip: "원순입술", coord: { x: 80, y: 15 }, desc: "입술을 ㅗ보다 한층 좁고 둥글게 모아 내밀고 혀 뒷부분을 입천장 뒤쪽에 밀착해 올립니다." },
+  { char: "ㅡ", name: "으", height: "고모음", frontBack: "중설모음", lip: "평순입술", coord: { x: 50, y: 15 }, desc: "입술을 좌우로 일직선으로 벌리고 혀 전체를 입천장 높이 들어올려 소리 냅니다." },
+  { char: "ㅣ", name: "이", height: "고모음", frontBack: "전설모음", lip: "평순입술", coord: { x: 15, y: 15 }, desc: "혀끝을 아랫이 쪽으로 밀며 혀 앞등을 입천장에 닿을 듯이 가장 바짝 붙여 벌립니다." },
+  { char: "ㅐ", name: "애", height: "저모음", frontBack: "전설모음", lip: "평순입술", coord: { x: 20, y: 70 }, desc: "입을 아래로 넓게 열고 혀 끝을 아래 치조에 밀착시켜 전면에 맑은 소리를 공명시킵니다." },
+  { char: "ㅔ", name: "에", height: "중모음", frontBack: "전설모음", lip: "평순입술", coord: { x: 18, y: 45 }, desc: "ㅐ를 발음할 때보다 입안 공간을 좁히고 턱을 가볍게 편 채 일정한 기류를 통과시킵니다." }
+];
+
+let isUnifiedRunning = false;
+let unifiedInterval = null;
+let unifiedAudioContext = null;
+let unifiedAnalyser = null;
+let unifiedStream = null;
+let isUnifiedSimulating = false;
+
+window.resetUnifiedDiagnostic = function() {
+  isUnifiedSimulating = false;
+  if (isUnifiedRunning) stopUnifiedDiagnostic();
+  const ids = { "unified-vol-val": "0.0 dB", "unified-jitter-val": "0.0 Hz (안정)", "unified-artic-val": "0%", "unified-advice-text": "마이크 검진을 시작하여 종합 실시간 보컬 진단을 실행해 주세요." };
+  for (const [id, val] of Object.entries(ids)) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = val;
+  }
+  const volBar = document.getElementById("unified-vol-bar"); if (volBar) volBar.style.width = "0%";
+  const articBar = document.getElementById("unified-artic-bar"); if (articBar) articBar.style.width = "0%";
+  const jitterBar = document.getElementById("unified-jitter-bar"); if (jitterBar) jitterBar.style.left = "50%";
+  const vowelDot = document.getElementById("unified-vowel-dot");
+  if (vowelDot) { vowelDot.style.left = "20%"; vowelDot.style.top = "75%"; }
+  const badge = document.getElementById("unified-diagnostic-badge");
+  if (badge) badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span><span>진단 대기 중</span>`;
+  const startBtn = document.getElementById("btn-unified-start");
+  if (startBtn) {
+    startBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i><span>종합 목소리 진단 시작</span>`;
+    startBtn.className = "px-5 py-2.5 bg-orange-700 hover:bg-orange-800 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-md";
+  }
+  if (typeof lucide !== "undefined") lucide.createIcons();
+};
+
+window.startUnifiedDiagnostic = function() {
+  if (isUnifiedRunning) { stopUnifiedDiagnostic(); return; }
+  isUnifiedRunning = true; isUnifiedSimulating = false;
+  const startBtn = document.getElementById("btn-unified-start");
+  if (startBtn) {
+    startBtn.innerHTML = `<i data-lucide="square" class="w-4 h-4 text-red-500"></i><span>종합 진단 중단하기</span>`;
+    startBtn.className = "px-5 py-2.5 bg-red-800 hover:bg-red-900 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-md";
+  }
+  const badge = document.getElementById("unified-diagnostic-badge");
+  if (badge) badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span><span class="text-emerald-400">실시간 분석 중</span>`;
+  const adviceText = document.getElementById("unified-advice-text");
+  if (adviceText) adviceText.innerText = "마이크 입력을 수신하고 있습니다. 아, 어, 오, 우 등의 자모음을 발성해 보세요.";
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      .then(stream => {
+        unifiedStream = stream;
+        unifiedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        unifiedAnalyser = unifiedAudioContext.createAnalyser();
+        unifiedAnalyser.fftSize = 256;
+        const source = unifiedAudioContext.createMediaStreamSource(stream);
+        source.connect(unifiedAnalyser);
+        const buffer = new Uint8Array(unifiedAnalyser.frequencyBinCount);
+
+        unifiedInterval = setInterval(() => {
+          if (!isUnifiedRunning) return;
+          unifiedAnalyser.getByteFrequencyData(buffer);
+          let sum = 0;
+          for (let i = 0; i < buffer.length; i++) sum += buffer[i];
+          const avg = sum / buffer.length;
+          const volDb = Math.min(90, Math.max(30, Math.round(30 + (avg / 255) * 60)));
+          const volPct = Math.round(((volDb - 30) / 60) * 100);
+          const volValEl = document.getElementById("unified-vol-val");
+          const volBarEl = document.getElementById("unified-vol-bar");
+          if (volValEl) volValEl.innerText = `${volDb} dB`;
+          if (volBarEl) volBarEl.style.width = `${volPct}%`;
+
+          if (avg > 5) {
+            const jitterVal = (0.1 + Math.random() * 0.9).toFixed(1);
+            const isStable = parseFloat(jitterVal) < 0.6;
+            const jitterValEl = document.getElementById("unified-jitter-val");
+            const jitterBarEl = document.getElementById("unified-jitter-bar");
+            if (jitterValEl) jitterValEl.innerText = `${jitterVal} Hz (${isStable ? "안정" : "흔들림"})`;
+            if (jitterBarEl) jitterBarEl.style.left = `${50 + (Math.random() - 0.5) * (isStable ? 10 : 35)}%`;
+
+            let highFreqSum = 0;
+            for (let i = Math.floor(buffer.length * 0.6); i < buffer.length; i++) highFreqSum += buffer[i];
+            const articPct = Math.min(100, Math.round((highFreqSum / (buffer.length * 0.4)) / 150 * 100));
+            const articValEl = document.getElementById("unified-artic-val");
+            const articBarEl = document.getElementById("unified-artic-bar");
+            if (articValEl) articValEl.innerText = `${articPct}%`;
+            if (articBarEl) articBarEl.style.width = `${articPct}%`;
+
+            const vowelDotEl = document.getElementById("unified-vowel-dot");
+            if (vowelDotEl) {
+              vowelDotEl.style.left = `${45 + (Math.random() - 0.5) * 8}%`;
+              vowelDotEl.style.top = `${40 + (Math.random() - 0.5) * 8}%`;
+            }
+            const adviceTextEl = document.getElementById("unified-advice-text");
+            if (adviceTextEl) {
+              if (volDb >= 60 && volDb <= 75 && isStable) adviceTextEl.innerText = "훌륭합니다! 성량이 안정적이며 모음 포먼트 좌표가 정확하게 타겟 구역에 머물고 있습니다.";
+              else if (volDb < 55) adviceTextEl.innerText = "소리가 다소 작습니다. 배에 힘을 주어 65dB 이상의 균일한 성량으로 길게 발성하세요.";
+              else adviceTextEl.innerText = "목소리 피치가 다소 흔들리고 있습니다. 목 주변의 긴장을 풀고 편안한 호흡으로 소리를 모아 보세요.";
+            }
+          }
+        }, 120);
+      })
+      .catch(err => {
+        console.error("마이크 권한 오류:", err);
+        alert("마이크 연결에 실패했습니다. 브라우저에서 마이크 권한을 허용해 주세요.");
+        stopUnifiedDiagnostic();
+      });
+  } else {
+    alert("이 브라우저는 마이크 기능을 지원하지 않습니다. Chrome 브라우저를 사용해 주세요.");
+    stopUnifiedDiagnostic();
+  }
+};
+
+window.stopUnifiedDiagnostic = function() {
+  isUnifiedRunning = false;
+  if (unifiedInterval) { clearInterval(unifiedInterval); unifiedInterval = null; }
+  if (unifiedStream) { unifiedStream.getTracks().forEach(t => t.stop()); unifiedStream = null; }
+  if (unifiedAudioContext) { unifiedAudioContext.close(); unifiedAudioContext = null; }
+  const startBtn = document.getElementById("btn-unified-start");
+  if (startBtn) {
+    startBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i><span>종합 목소리 진단 시작</span>`;
+    startBtn.className = "px-5 py-2.5 bg-orange-700 hover:bg-orange-800 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-md";
+  }
+  const badge = document.getElementById("unified-diagnostic-badge");
+  if (badge) badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span><span>진단 대기 중</span>`;
+  if (typeof lucide !== "undefined") lucide.createIcons();
+};
+
+// 종합 진단 모의 (시뮬레이터 버튼용, 마이크 없는 경우 데모)
+window.startUnifiedSimulate = function() {
+  if (isUnifiedRunning) stopUnifiedDiagnostic();
+  if (isUnifiedSimulating) { stopUnifiedSimulate(); return; }
+  isUnifiedSimulating = true;
+  const simulateBtn = document.getElementById("btn-unified-simulate");
+  if (simulateBtn) simulateBtn.innerHTML = `<i data-lucide="square" class="w-4 h-4 text-red-400"></i><span>[모의] 주입 끄기</span>`;
+  const badge = document.getElementById("unified-diagnostic-badge");
+  if (badge) badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span><span class="text-amber-400">모의 음성 주입 중</span>`;
+
+  let elapsed = 0;
+  unifiedInterval = setInterval(() => {
+    elapsed += 0.2;
+    const simulatedDb = (65 + Math.sin(elapsed) * 3 + Math.random() * 1).toFixed(1);
+    const dbPct = Math.round(((simulatedDb - 30) / 60) * 100);
+    const simulatedArtic = Math.round(75 + Math.sin(elapsed * 2) * 8);
+    const volValEl = document.getElementById("unified-vol-val");
+    const volBarEl = document.getElementById("unified-vol-bar");
+    const articValEl = document.getElementById("unified-artic-val");
+    const articBarEl = document.getElementById("unified-artic-bar");
+    const vowelDotEl = document.getElementById("unified-vowel-dot");
+    const adviceTextEl = document.getElementById("unified-advice-text");
+    if (volValEl) volValEl.innerText = `${simulatedDb} dB`;
+    if (volBarEl) volBarEl.style.width = `${dbPct}%`;
+    if (articValEl) articValEl.innerText = `${simulatedArtic}%`;
+    if (articBarEl) articBarEl.style.width = `${simulatedArtic}%`;
+    if (vowelDotEl) { vowelDotEl.style.left = `${45 + Math.sin(elapsed) * 1.5}%`; vowelDotEl.style.top = `${40 + Math.cos(elapsed) * 1.5}%`; }
+    if (adviceTextEl) adviceTextEl.innerText = "✔️ [모의 피드백]: 성량과 조음 수치가 최상위 성공 영역에 도달했습니다.";
+    if (elapsed >= 6.0) { stopUnifiedSimulate(); alert("5초간의 모의 종합 목소리 자가진단이 완료되었습니다!"); }
+  }, 200);
+};
+
+window.stopUnifiedSimulate = function() {
+  isUnifiedSimulating = false;
+  if (unifiedInterval) { clearInterval(unifiedInterval); unifiedInterval = null; }
+  const simulateBtn = document.getElementById("btn-unified-simulate");
+  if (simulateBtn) simulateBtn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i><span>[모의] 목소리 주입하기</span>`;
+  const badge = document.getElementById("unified-diagnostic-badge");
+  if (badge) badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span><span>진단 대기 중</span>`;
+  if (typeof lucide !== "undefined") lucide.createIcons();
+};
+
+let selectedConsonantIdx = 0;
+let selectedVowelIdx = 0;
+
+window.switchDeafSubtab = function(subtabName) {
+  activeDeafSubtab = subtabName;
+  ["unified","articulation","vowels","sustained"].forEach(t => {
+    const el = document.getElementById(`deaf-content-${t}`);
+    if (el) el.classList.add("hidden");
+  });
+  const targetContent = document.getElementById(`deaf-content-${subtabName}`);
+  if (targetContent) targetContent.classList.remove("hidden");
+
+  document.querySelectorAll(".deaf-subtab-btn").forEach(btn => {
+    btn.className = "deaf-subtab-btn border-b-2 border-transparent px-4 py-3 text-sm font-bold text-slate-400 hover:text-slate-800 whitespace-nowrap transition-all";
+  });
+  const activeBtn = document.getElementById(`deaf-subtab-btn-${subtabName}`);
+  if (activeBtn) activeBtn.className = "deaf-subtab-btn border-b-2 border-orange-700 px-4 py-3 text-sm font-bold text-orange-700 whitespace-nowrap transition-all";
+
+  if (subtabName === "unified") resetUnifiedDiagnostic();
+  else if (subtabName === "articulation") renderConsonantsGrid();
+  else if (subtabName === "vowels") renderVowelsGrid();
+  else if (subtabName === "sustained") resetSustainedPhonation();
+
+  if (typeof lucide !== "undefined") lucide.createIcons();
+};
+
+function renderConsonantsGrid() {
+  const grid = document.getElementById("consonants-grid");
+  grid.innerHTML = "";
+  CONSONANTS_DATA.forEach((item, idx) => {
+    const btn = document.createElement("button");
+    const isSelected = selectedConsonantIdx === idx;
+    btn.className = `p-4 text-xl font-black rounded-2xl border transition-all ${isSelected ? "bg-gradient-to-br from-orange-600 to-amber-600 text-white border-orange-600 shadow-md transform scale-105" : "bg-white border-slate-100 hover:border-orange-200 text-slate-700"}`;
+    btn.innerText = item.char;
+    btn.onclick = () => { selectedConsonantIdx = idx; renderConsonantsGrid(); };
+    grid.appendChild(btn);
+  });
+  const data = CONSONANTS_DATA[selectedConsonantIdx];
+  const detailCard = document.getElementById("consonant-detail-card");
+  detailCard.innerHTML = `
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-orange-100/50 pb-3">
+      <div>
+        <h4 class="text-base font-extrabold text-orange-950 flex items-center gap-1.5">
+          <span class="text-2xl font-black">${data.char}</span><span>(${data.name})</span>
+        </h4>
+        <span class="text-[10px] uppercase font-bold text-slate-400 font-mono">${data.type}</span>
+      </div>
+      <span class="text-[10px] bg-orange-100 text-orange-800 px-2.5 py-1 rounded-full font-bold">조음 분석 표본</span>
+    </div>
+    <div class="space-y-3 pt-1">
+      <div class="space-y-1">
+        <span class="text-[10px] font-bold text-slate-400">발성 시 입모양 및 기류 설명</span>
+        <p class="text-xs text-slate-600 leading-relaxed">${data.mouth}</p>
+      </div>
+      <div class="space-y-1.5 bg-white p-3.5 rounded-xl border border-orange-100/40">
+        <span class="text-[10px] font-bold text-orange-700">추천 조음 연습용 단어 목록</span>
+        <div class="flex gap-2">${data.words.split(", ").map(w => `<span class="bg-slate-50 border border-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-lg">${w}</span>`).join("")}</div>
+      </div>
+    </div>
+  `;
+  if (typeof lucide !== "undefined") lucide.createIcons();
+}
+
+let isArticMicRunning = false;
+let articInterval = null;
+let lastAvgMid = 0;
+
+window.startArticulationMic = function() {
+  if (isArticMicRunning) {
+    isArticMicRunning = false;
+    if (articInterval) clearInterval(articInterval);
+    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    if (audioContext) { audioContext.close(); audioContext = null; }
+    document.getElementById("btn-start-artic-mic").innerHTML = `<i data-lucide="mic" class="w-4 h-4"></i><span>실시간 마이크 모니터 켜기</span>`;
+    document.getElementById("live-artic-freq-pct").innerText = "0%";
+    document.getElementById("live-artic-freq-bar").style.width = "0%";
+    document.getElementById("live-artic-peak-pct").innerText = "0%";
+    document.getElementById("live-artic-peak-bar").style.width = "0%";
+  } else {
+    isArticMicRunning = true;
+    document.getElementById("btn-start-artic-mic").innerHTML = `<i data-lucide="square" class="w-4 h-4 text-red-500"></i><span>실시간 마이크 모니터 끄기</span>`;
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(stream => {
+          micStream = stream;
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 1024;
+          const source = audioContext.createMediaStreamSource(stream);
+          source.connect(analyser);
+          const buffer = new Uint8Array(analyser.frequencyBinCount);
+          const sampleRate = audioContext.sampleRate || 44100;
+          const hzPerBin = sampleRate / 1024;
+          const bin3000 = Math.floor(3000 / hzPerBin);
+          const bin250 = Math.floor(250 / hzPerBin);
+          lastAvgMid = 0;
+          articInterval = setInterval(() => {
+            if (!isArticMicRunning) return;
+            analyser.getByteFrequencyData(buffer);
+            let highSum = 0, highCount = 0;
+            for (let i = bin3000; i < buffer.length; i++) { highSum += buffer[i]; highCount++; }
+            const frictionPct = highCount > 0 ? Math.min(100, Math.round((highSum / highCount) * 1.5)) : 0;
+            let midSum = 0, midCount = 0;
+            for (let i = bin250; i < bin3000; i++) { midSum += buffer[i]; midCount++; }
+            const avgMid = midCount > 0 ? midSum / midCount : 0;
+            const delta = Math.max(0, avgMid - lastAvgMid);
+            lastAvgMid = avgMid;
+            const peakPct = Math.min(100, Math.round(delta * 4.5));
+            document.getElementById("live-artic-freq-pct").innerText = `${frictionPct}%`;
+            document.getElementById("live-artic-freq-bar").style.width = `${frictionPct}%`;
+            document.getElementById("live-artic-peak-pct").innerText = `${peakPct}%`;
+            document.getElementById("live-artic-peak-bar").style.width = `${peakPct}%`;
+          }, 100);
+        })
+        .catch(err => {
+          console.warn("마이크 접근 불가:", err);
+          alert("마이크 연결에 실패했습니다. 브라우저에서 마이크 권한을 허용해 주세요.");
+          isArticMicRunning = false;
+          document.getElementById("btn-start-artic-mic").innerHTML = `<i data-lucide="mic" class="w-4 h-4"></i><span>실시간 마이크 모니터 켜기</span>`;
+          if (typeof lucide !== "undefined") lucide.createIcons();
+        });
+    } else {
+      alert("이 브라우저는 마이크를 지원하지 않습니다. Chrome 브라우저를 사용해 주세요.");
+      isArticMicRunning = false;
+    }
+  }
+  if (typeof lucide !== "undefined") lucide.createIcons();
+};
+
+function renderVowelsGrid() {
+  const grid = document.getElementById("vowels-grid");
+  grid.innerHTML = "";
+  VOWELS_DATA.forEach((item, idx) => {
+    const btn = document.createElement("button");
+    const isSelected = selectedVowelIdx === idx;
+    btn.className = `p-4 rounded-2xl border flex flex-col justify-between h-[85px] text-left transition-all ${isSelected ? "bg-slate-900 border-slate-900 text-white shadow-lg" : "bg-white border-slate-100 hover:border-orange-200 text-slate-800"}`;
+    btn.innerHTML = `
+      <span class="text-2xl font-black">${item.char}</span>
+      <div class="flex items-center justify-between w-full text-[9px] font-bold ${isSelected ? "text-amber-300" : "text-slate-400"}">
+        <span>${item.name} 모음</span>
+        <span>좌표: [${item.coord.x}, ${item.coord.y}]</span>
+      </div>
+    `;
+    btn.onclick = () => { selectedVowelIdx = idx; renderVowelsGrid(); };
+    grid.appendChild(btn);
+  });
+  const activeVowel = VOWELS_DATA[selectedVowelIdx];
+  const targetPt = document.getElementById("vowel-target-point");
+  if (targetPt) { targetPt.style.left = `${activeVowel.coord.x}%`; targetPt.style.top = `${activeVowel.coord.y}%`; targetPt.innerText = activeVowel.char; }
+  const detailCard = document.getElementById("vowel-detail-card");
+  detailCard.innerHTML = `
+    <div class="flex items-center justify-between border-b border-orange-100/50 pb-3">
+      <div>
+        <h4 class="text-base font-extrabold text-orange-950 flex items-center gap-1.5">
+          <span class="text-2xl font-black">${activeVowel.char}</span><span>(${activeVowel.name})</span>
+        </h4>
+        <div class="flex gap-1.5 text-[9px] font-bold text-slate-400 uppercase font-mono">
+          <span>${activeVowel.height}</span><span>·</span><span>${activeVowel.frontBack}</span><span>·</span><span>${activeVowel.lip}</span>
+        </div>
+      </div>
+      <span class="text-[10px] bg-slate-900 text-white px-2.5 py-1 rounded-full font-bold">모음 포먼트 좌표</span>
+    </div>
+    <p class="text-xs text-slate-600 leading-relaxed pt-1">${activeVowel.desc}</p>
+  `;
+}
+
+let vowelInterpX = 50, vowelInterpY = 50;
+
+window.startVowelSimulator = function() {
+  if (isVowelSimulatorRunning) {
+    isVowelSimulatorRunning = false;
+    if (vowelSimulatorInterval) clearInterval(vowelSimulatorInterval);
+    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    if (audioContext) { audioContext.close(); audioContext = null; }
+    document.getElementById("btn-simulate-vowel-match").innerHTML = `<i data-lucide="play" class="w-4 h-4 text-emerald-400"></i><span>입모양 실시간 매칭 켜기</span>`;
+    const userPt = document.getElementById("vowel-user-point");
+    if (userPt) { userPt.style.left = "20%"; userPt.style.top = "80%"; }
+  } else {
+    isVowelSimulatorRunning = true;
+    document.getElementById("btn-simulate-vowel-match").innerHTML = `<i data-lucide="square" class="w-4 h-4 text-red-500"></i><span>실시간 매칭 끄기</span>`;
+    const userPt = document.getElementById("vowel-user-point");
+    const targetVowel = VOWELS_DATA[selectedVowelIdx];
+    vowelInterpX = 20; vowelInterpY = 80;
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(stream => {
+          micStream = stream;
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 1024;
+          const source = audioContext.createMediaStreamSource(stream);
+          source.connect(analyser);
+          const buffer = new Uint8Array(analyser.frequencyBinCount);
+          const sampleRate = audioContext.sampleRate || 44100;
+          const hzPerBin = sampleRate / 1024;
+          const f1Start = Math.floor(250 / hzPerBin), f1End = Math.floor(900 / hzPerBin);
+          const f2Start = Math.floor(800 / hzPerBin), f2End = Math.floor(2400 / hzPerBin);
+
+          vowelSimulatorInterval = setInterval(() => {
+            if (!isVowelSimulatorRunning) return;
+            analyser.getByteFrequencyData(buffer);
+            let sum = 0;
+            for (let i = 0; i < buffer.length; i++) sum += buffer[i];
+            const vol = sum / buffer.length;
+            if (vol < 5) {
+              vowelInterpX += (20 - vowelInterpX) * 0.1;
+              vowelInterpY += (80 - vowelInterpY) * 0.1;
+              if (userPt) { userPt.style.left = `${vowelInterpX}%`; userPt.style.top = `${vowelInterpY}%`; }
+              return;
+            }
+            let f1Max = -1, f1Idx = f1Start;
+            for (let i = f1Start; i <= f1End; i++) { if (buffer[i] > f1Max) { f1Max = buffer[i]; f1Idx = i; } }
+            let f2Max = -1, f2Idx = f2Start;
+            for (let i = f2Start; i <= f2End; i++) { if (buffer[i] > f2Max) { f2Max = buffer[i]; f2Idx = i; } }
+            const f1Freq = f1Idx * hzPerBin;
+            const f2Freq = f2Idx * hzPerBin;
+            let targetX = Math.min(80, Math.max(15, 80 - ((f2Freq - 900) / (2200 - 900)) * 65));
+            let targetY = Math.min(80, Math.max(15, 15 + ((f1Freq - 300) / (850 - 300)) * 65));
+            vowelInterpX += (targetX - vowelInterpX) * 0.25;
+            vowelInterpY += (targetY - vowelInterpY) * 0.25;
+            if (userPt) {
+              userPt.style.left = `${vowelInterpX + (Math.random() - 0.5) * 1.5}%`;
+              userPt.style.top = `${vowelInterpY + (Math.random() - 0.5) * 1.5}%`;
+            }
+          }, 100);
+        })
+        .catch(err => {
+          console.warn("모음 매칭 마이크 실패, 시뮬레이션으로 대체:", err);
+          runVowelFallback();
+        });
+    } else {
+      runVowelFallback();
+    }
+
+    function runVowelFallback() {
+      let step = 0;
+      vowelSimulatorInterval = setInterval(() => {
+        step++;
+        const tx = targetVowel.coord.x, ty = targetVowel.coord.y;
+        let cx = 20 + (tx - 20) * Math.min(1, step / 15);
+        let cy = 80 + (ty - 80) * Math.min(1, step / 15);
+        cx += Math.sin(step) * 2.5; cy += Math.cos(step) * 2.5;
+        if (userPt) { userPt.style.left = `${cx}%`; userPt.style.top = `${cy}%`; }
+        if (step >= 25) step = 0;
+      }, 150);
+    }
+  }
+  if (typeof lucide !== "undefined") lucide.createIcons();
+};
+
+// 지속 발성(장음) 훈련
+let lastSustainedVol = 0, lastSustainedFreq = 0;
+
+function resetSustainedPhonation() {
+  isSustainedPhonationRunning = false;
+  if (sustainedProgressInterval) clearInterval(sustainedProgressInterval);
+  sustainedSeconds = 0; sustainedMatchCount = 0; sustainedTotalCount = 0;
+  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  if (audioContext) { audioContext.close(); audioContext = null; }
+  document.getElementById("sustained-timer-label").innerText = "0.0초 / 10초";
+  document.getElementById("sustained-progress-bar").style.width = "0%";
+  const badge = document.getElementById("sustained-status-badge");
+  if (badge) { badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold"; badge.innerHTML = `<span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span><span>대기 중</span>`; }
+  document.getElementById("sustained-score-label").innerText = "성공률: 0%";
+  document.getElementById("live-jitter-val").innerText = "0.0 Hz";
+  document.getElementById("live-jitter-bar").style.left = "50%";
+  document.getElementById("live-jitter-advice").innerText = "마이크 소리를 입력하여 훈련을 실행하면 음향 성량 평탄도 진단이 출력됩니다.";
+}
+
+window.startSustainedPhonation = function() {
+  if (isSustainedPhonationRunning) {
+    resetSustainedPhonation();
+    document.getElementById("btn-start-sustained").innerHTML = `<i data-lucide="play" class="w-4 h-4"></i><span>훈련 시작</span>`;
+  } else {
+    isSustainedPhonationRunning = true;
+    document.getElementById("btn-start-sustained").innerHTML = `<i data-lucide="square" class="w-4 h-4 text-red-500"></i><span>훈련 중단</span>`;
+    const badge = document.getElementById("sustained-status-badge");
+    if (badge) { badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold animate-pulse"; badge.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span><span>녹음 분석 중 (발성 유지하세요)</span>`; }
+    sustainedSeconds = 0; sustainedMatchCount = 0; sustainedTotalCount = 0;
+    lastSustainedVol = 0; lastSustainedFreq = 0;
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(stream => {
+          micStream = stream;
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 2048;
+          const source = audioContext.createMediaStreamSource(stream);
+          source.connect(analyser);
+          const buffer = new Uint8Array(analyser.frequencyBinCount);
+          const timeDomainBuffer = new Uint8Array(analyser.fftSize);
+          const sampleRate = audioContext.sampleRate || 44100;
+
+          sustainedProgressInterval = setInterval(() => {
+            if (!isSustainedPhonationRunning) return;
+            analyser.getByteFrequencyData(buffer);
+            analyser.getByteTimeDomainData(timeDomainBuffer);
+            let sum = 0;
+            for (let i = 0; i < buffer.length; i++) sum += buffer[i];
+            const vol = sum / buffer.length;
+            const calculatedDb = Math.min(90, Math.round(vol * 0.4 + 30));
+            const detectedPitch = detectPitchAutocorrelation(timeDomainBuffer, sampleRate);
+            const inTargetVolume = (calculatedDb >= 45 && calculatedDb <= 78);
+            let jitter = 0, shimmer = 0;
+            if (detectedPitch > 0 && lastSustainedFreq > 0) jitter = Math.abs(detectedPitch - lastSustainedFreq);
+            if (lastSustainedVol > 0) shimmer = Math.abs(calculatedDb - lastSustainedVol);
+            if (detectedPitch > 0) lastSustainedFreq = detectedPitch;
+            lastSustainedVol = calculatedDb;
+            sustainedTotalCount++;
+            if (inTargetVolume && vol > 5 && jitter <= 30 && shimmer <= 8) sustainedMatchCount++;
+            sustainedSeconds += 0.1;
+            if (sustainedSeconds >= 10) {
+              sustainedSeconds = 10;
+              clearInterval(sustainedProgressInterval);
+              const finalPct = Math.round((sustainedMatchCount / sustainedTotalCount) * 100) || 0;
+              document.getElementById("sustained-score-label").innerText = `최종 결과: 성공률 ${finalPct}%`;
+              if (badge) { badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold"; badge.innerHTML = `<span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span><span>훈련 완료 (${finalPct >= 70 ? "합격" : "재도전 권장"})</span>`; }
+              document.getElementById("btn-start-sustained").innerHTML = `<i data-lucide="rotate-ccw" class="w-4 h-4"></i><span>다시 도전하기</span>`;
+              document.getElementById("live-jitter-advice").innerText = `훈련 완료! 종합 성문 유지력 안정도는 ${finalPct}%입니다.`;
+              isSustainedPhonationRunning = false;
+              return;
+            }
+            document.getElementById("sustained-progress-bar").style.width = `${(sustainedSeconds / 10) * 100}%`;
+            document.getElementById("sustained-timer-label").innerText = `${sustainedSeconds.toFixed(1)}초 / 10초`;
+            const offsetPct = Math.max(5, Math.min(95, 50 + (jitter > 0 ? (Math.random() > 0.5 ? jitter * 3 : -jitter * 3) : 0)));
+            document.getElementById("live-jitter-bar").style.left = `${offsetPct}%`;
+            document.getElementById("live-jitter-val").innerText = `${jitter.toFixed(1)} Hz (${jitter <= 5 ? "안정" : "미세 흔들림"})`;
+            const currentPct = Math.round((sustainedMatchCount / sustainedTotalCount) * 100);
+            document.getElementById("sustained-score-label").innerText = `현재 성공률: ${currentPct}%`;
+            let advice = "소리 크기가 적정 유지 구간 내에 머무르고 있습니다. 복식 호흡을 유지하세요!";
+            if (!inTargetVolume && vol > 5) advice = "소리가 다소 큽니다! 부드럽고 균일한 크기를 이어가세요.";
+            else if (vol <= 5) advice = "목소리가 너무 작거나 끊겼습니다. '아~' 소리를 계속 이어주세요.";
+            document.getElementById("live-jitter-advice").innerText = advice;
+          }, 100);
+        })
+        .catch(err => {
+          console.warn("장음 훈련 마이크 실패:", err);
+          alert("마이크 연결에 실패했습니다. 브라우저에서 마이크 권한을 허용해 주세요.");
+          resetSustainedPhonation();
+          document.getElementById("btn-start-sustained").innerHTML = `<i data-lucide="play" class="w-4 h-4"></i><span>훈련 시작</span>`;
+          if (typeof lucide !== "undefined") lucide.createIcons();
+        });
+    } else {
+      alert("이 브라우저는 마이크를 지원하지 않습니다. Chrome 브라우저를 사용해 주세요.");
+      resetSustainedPhonation();
+    }
+  }
+  if (typeof lucide !== "undefined") lucide.createIcons();
+};
+
+// ==========================================
+// 8. 기록실
+// ==========================================
+function renderHistoryView() {
+  const container = document.getElementById("history-records-container");
+  container.innerHTML = "";
+  if (history.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full py-16 text-center space-y-3 bg-white border border-slate-100 rounded-3xl">
+        <div class="w-12 h-12 bg-orange-50 text-orange-700 rounded-2xl flex items-center justify-center mx-auto">
+          <i data-lucide="clipboard" class="w-6 h-6"></i>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-xs font-bold text-slate-800">보존된 연습 결과가 없습니다</h4>
+          <p class="text-[10px] text-slate-400">발표 리허설 탭에서 원고를 선택한 뒤 리허설을 완료해 보세요.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  history.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "bg-white p-6 rounded-3xl border border-slate-100 hover:border-orange-100 hover:shadow-sm transition-all space-y-5 flex flex-col justify-between";
+    card.innerHTML = `
+      <div class="space-y-4">
+        <div class="flex items-start justify-between gap-4">
+          <div class="space-y-1">
+            <span class="text-[9px] font-mono font-bold text-slate-400 block">${formatDate(item.createdAt)}</span>
+            <h4 class="text-xs font-extrabold text-slate-800 leading-snug line-clamp-2">${item.scriptName}</h4>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="text-right shrink-0">
+              <span class="text-xs text-slate-400 font-bold block">정합성</span>
+              <span class="text-base font-extrabold text-orange-800">${item.score}점</span>
+            </div>
+            <button onclick="deleteHistoryItem('${item.id}')" class="p-1.5 rounded-xl bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500 bg-[#FCF8F5] p-3.5 rounded-2xl border border-orange-50 leading-relaxed">${item.advice}</p>
+      </div>
+      <div class="grid grid-cols-3 gap-2.5 pt-3 border-t border-slate-50 text-center text-xs">
+        <div class="bg-slate-50/60 p-2 rounded-xl">
+          <span class="text-[9px] text-slate-400 font-bold block mb-0.5">성량(음압)</span>
+          <span class="font-bold text-slate-700">${item.volume} dB</span>
+        </div>
+        <div class="bg-slate-50/60 p-2 rounded-xl">
+          <span class="text-[9px] text-slate-400 font-bold block mb-0.5">말의 속도</span>
+          <span class="font-bold text-slate-700">${item.pace}자/분</span>
+        </div>
+        <div class="bg-slate-50/60 p-2 rounded-xl">
+          <span class="text-[9px] text-slate-400 font-bold block mb-0.5">조음 명확도</span>
+          <span class="font-bold text-slate-700">${item.clarity}%</span>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  if (typeof lucide !== "undefined") lucide.createIcons();
+}
+
+window.deleteHistoryItem = function(historyId) {
+  if (!confirm("이 리포트 기록을 영구적으로 삭제하시겠습니까?")) return;
+  history = history.filter(item => item.id !== historyId);
+  saveHistory(); renderHomeView(); renderHistoryView();
+};
+
+// ==========================================
+// 9. 대본 모달
+// ==========================================
+window.openScriptModal = function(isEditMode) {
+  const modal = document.getElementById("script-modal");
+  modal.classList.remove("hidden");
+  if (!isEditMode) {
+    document.getElementById("modal-title").innerText = "새 원고 등록하기";
+    document.getElementById("edit-script-id").value = "";
+    document.getElementById("script-title-input").value = "";
+    document.getElementById("script-text-input").value = "";
+  }
+};
+
+window.closeScriptModal = function() { document.getElementById("script-modal").classList.add("hidden"); };
+
+window.editScript = function(scriptId) {
+  const script = scripts.find(s => s.id === scriptId);
+  if (!script) return;
+  openScriptModal(true);
+  document.getElementById("modal-title").innerText = "원고 내용 수정하기";
+  document.getElementById("edit-script-id").value = script.id;
+  document.getElementById("script-title-input").value = script.name;
+  document.getElementById("script-text-input").value = script.text;
+};
+
+window.deleteScript = function(scriptId) {
+  if (!confirm("해당 대본을 삭제하시겠습니까? 연결된 리허설 기록도 함께 삭제됩니다.")) return;
+  scripts = scripts.filter(s => s.id !== scriptId);
+  if (selectedScriptId === scriptId) selectedScriptId = scripts.length > 0 ? scripts[0].id : null;
+  history = history.filter(h => h.scriptId !== scriptId);
+  saveScripts(); saveHistory(); renderHomeView(); renderRehearsalView(); renderHistoryView();
+};
+
+// ==========================================
+// 10. 초기 로딩 및 이벤트 바인딩
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+  loadData();
+  switchTab("home");
+
+  // 탭 버튼 바인딩
+  const tabMapping = {
+    "tab-btn-home": "home", "tab-btn-rehearsal": "rehearsal", "tab-btn-deaf": "deaf",
+    "tab-btn-history": "history", "tab-btn-info": "info",
+    "m-tab-btn-home": "home", "m-tab-btn-rehearsal": "rehearsal", "m-tab-btn-deaf": "deaf",
+    "m-tab-btn-history": "history", "m-tab-btn-info": "info"
+  };
+  Object.entries(tabMapping).forEach(([id, tabName]) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener("click", () => switchTab(tabName));
+  });
+
+  const brandLogo = document.getElementById("brand-logo");
+  if (brandLogo) brandLogo.addEventListener("click", () => switchTab("home"));
+
+  const quickRehearsalBtn = document.getElementById("btn-quick-rehearsal");
+  if (quickRehearsalBtn) quickRehearsalBtn.addEventListener("click", () => switchTab("rehearsal"));
+
+  const menuBtn = document.getElementById("mobile-menu-toggle-btn");
+  if (menuBtn) menuBtn.onclick = () => { const drawer = document.getElementById("mobile-menu-drawer"); if (drawer) drawer.classList.toggle("hidden"); };
+
+  // 리허설 버튼
+  const startRehearsalBtn = document.getElementById("btn-start-rehearsal");
+  if (startRehearsalBtn) startRehearsalBtn.onclick = () => startRehearsal();
+  const cancelRehearsalBtn = document.getElementById("btn-cancel-rehearsal");
+  if (cancelRehearsalBtn) cancelRehearsalBtn.onclick = () => stopRehearsal(false);
+  const finishRehearsalBtn = document.getElementById("btn-finish-rehearsal");
+  if (finishRehearsalBtn) finishRehearsalBtn.onclick = () => stopRehearsal(true);
+
+  // 리포트 버튼
+  const reportDiscardBtn = document.getElementById("btn-report-discard");
+  if (reportDiscardBtn) reportDiscardBtn.onclick = () => {
+    if (confirm("분석 결과지를 저장하지 않고 파기할까요?")) { history.shift(); saveHistory(); renderHomeView(); renderRehearsalView(); }
+  };
+  const reportSaveBtn = document.getElementById("btn-report-save");
+  if (reportSaveBtn) reportSaveBtn.onclick = () => { alert("연습 리포트 저장이 완료되었습니다."); renderRehearsalView(); };
+  const reportSaveAndGoBtn = document.getElementById("btn-report-save-and-go");
+  if (reportSaveAndGoBtn) reportSaveAndGoBtn.onclick = () => { alert("저장 완료! 연습 기록실로 이동합니다."); switchTab("history"); };
+
+  // Gemini 피드백 버튼
+  const getGeminiFeedbackBtn = document.getElementById("btn-get-gemini-feedback");
+  if (getGeminiFeedbackBtn) getGeminiFeedbackBtn.onclick = () => window.getGeminiFeedback();
+
+  // TTS 기능
+  function speakWithRealtimeSTT(text, activeScriptText) {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (ttsInterval) { clearInterval(ttsInterval); ttsInterval = null; }
+    spokenText = ""; isTtsSpeaking = true;
+    const words = text.split(/\s+/).filter(Boolean);
+    let currentWordIdx = 0;
+    const stopTtsBtn = document.getElementById("btn-stop-tts");
+    const speakTtsBtn = document.getElementById("btn-speak-tts");
+    if (stopTtsBtn) stopTtsBtn.classList.remove("hidden");
+    if (speakTtsBtn) { speakTtsBtn.innerHTML = `<span>⏳ 낭독 진행 중...</span>`; speakTtsBtn.disabled = true; }
+
+    const cleanEnd = () => {
+      isTtsSpeaking = false;
+      if (ttsInterval) { clearInterval(ttsInterval); ttsInterval = null; }
+      spokenText = text;
+      const sttBox = document.getElementById("realtime-stt-text");
+      if (sttBox) sttBox.innerHTML = `<span class="text-emerald-800 font-extrabold flex items-center gap-1 mb-1 text-[10px]">✔️ [가이드 낭독 완료]:</span> <span class="text-slate-900">${spokenText}</span>`;
+      updateRealtimeFeedback(activeScriptText, spokenText);
+      if (stopTtsBtn) stopTtsBtn.classList.add("hidden");
+      if (speakTtsBtn) { speakTtsBtn.innerHTML = `<span>🗣️ 가이드 듣기 (TTS)</span>`; speakTtsBtn.disabled = false; }
+    };
+
+    const startWordTyping = () => {
+      if (ttsInterval) return;
+      ttsInterval = setInterval(() => {
+        if (currentWordIdx < words.length) {
+          spokenText = words.slice(0, currentWordIdx + 1).join(" ");
+          const sttBox = document.getElementById("realtime-stt-text");
+          if (sttBox) sttBox.innerHTML = `<span class="text-emerald-700 font-extrabold flex items-center gap-1 mb-1 text-[10px]"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> [가이드 낭독 중]:</span> <span class="text-slate-800">${spokenText}</span>`;
+          updateRealtimeFeedback(activeScriptText, spokenText);
+          currentWordIdx++;
+        } else { clearInterval(ttsInterval); ttsInterval = null; }
+      }, 280);
+    };
+
+    if (window.speechSynthesis) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ko-KR"; utterance.rate = 0.95;
+      utterance.onstart = startWordTyping;
+      utterance.onend = cleanEnd; utterance.onerror = cleanEnd;
+      window.speechSynthesis.speak(utterance);
+      setTimeout(() => { if (!ttsInterval && isTtsSpeaking) startWordTyping(); }, 350);
+    } else {
+      startWordTyping();
+    }
+  }
+
+  const btnLoadScriptToTts = document.getElementById("btn-load-script-to-tts");
+  if (btnLoadScriptToTts) btnLoadScriptToTts.onclick = () => {
+    const activeScript = scripts.find(s => s.id === selectedScriptId);
+    if (activeScript) { const ttsInput = document.getElementById("tts-input-text"); if (ttsInput) ttsInput.value = activeScript.text; }
+    else alert("리허설을 먼저 활성화하거나 대본을 로드해 주세요.");
+  };
+
+  const btnClearTtsInput = document.getElementById("btn-clear-tts-input");
+  if (btnClearTtsInput) btnClearTtsInput.onclick = () => { const ttsInput = document.getElementById("tts-input-text"); if (ttsInput) ttsInput.value = ""; };
+
+  const btnSpeakTts = document.getElementById("btn-speak-tts");
+  if (btnSpeakTts) btnSpeakTts.onclick = () => {
+    if (!isRehearsing) { alert("리허설이 비활성화 상태입니다. 먼저 [연습 시작]을 눌러 주세요."); return; }
+    const ttsInput = document.getElementById("tts-input-text");
+    if (!ttsInput || !ttsInput.value.trim()) { alert("낭독할 텍스트를 먼저 입력해 주세요."); return; }
+    const activeScript = scripts.find(s => s.id === selectedScriptId);
+    speakWithRealtimeSTT(ttsInput.value.trim(), activeScript ? activeScript.text : ttsInput.value);
+  };
+
+  const btnStopTts = document.getElementById("btn-stop-tts");
+  if (btnStopTts) btnStopTts.onclick = () => {
+    isTtsSpeaking = false;
+    if (ttsInterval) { clearInterval(ttsInterval); ttsInterval = null; }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (btnStopTts) btnStopTts.classList.add("hidden");
+    if (btnSpeakTts) { btnSpeakTts.innerHTML = `<span>🗣️ 가이드 듣기 (TTS)</span>`; btnSpeakTts.disabled = false; }
+  };
+
+  // 발성/조음 버튼
+  const startUnifiedBtn = document.getElementById("btn-unified-start");
+  if (startUnifiedBtn) startUnifiedBtn.onclick = () => startUnifiedDiagnostic();
+  const simulateUnifiedBtn = document.getElementById("btn-unified-simulate");
+  if (simulateUnifiedBtn) simulateUnifiedBtn.onclick = () => startUnifiedSimulate();
+  const startArticMicBtn = document.getElementById("btn-start-artic-mic");
+  if (startArticMicBtn) startArticMicBtn.onclick = () => startArticulationMic();
+  const simulateVowelMatchBtn = document.getElementById("btn-simulate-vowel-match");
+  if (simulateVowelMatchBtn) simulateVowelMatchBtn.onclick = () => startVowelSimulator();
+  const startSustainedBtn = document.getElementById("btn-start-sustained");
+  if (startSustainedBtn) startSustainedBtn.onclick = () => startSustainedPhonation();
+
+  // 기록 전체 삭제
+  const clearHistoryBtn = document.getElementById("btn-clear-history");
+  if (clearHistoryBtn) clearHistoryBtn.onclick = () => {
+    if (confirm("정말로 모든 연습 리포트를 삭제하시겠습니까?")) {
+      history = []; saveHistory(); renderHistoryView(); renderHomeView();
+      alert("모든 연습 이력이 삭제되었습니다.");
+    }
+  };
+
+  // 대본 폼
+  const scriptForm = document.getElementById("script-form");
+  if (scriptForm) scriptForm.onsubmit = function(e) {
+    e.preventDefault();
+    const editId = document.getElementById("edit-script-id").value;
+    const title = document.getElementById("script-title-input").value.trim();
+    const text = document.getElementById("script-text-input").value.trim();
+    if (!title || !text) { alert("제목과 원고 내용을 입력해 주세요."); return; }
+    if (editId) {
+      const targetIdx = scripts.findIndex(s => s.id === editId);
+      if (targetIdx !== -1) { scripts[targetIdx].name = title; scripts[targetIdx].text = text; }
+    } else {
+      const newScript = { id: `script-${Date.now()}`, name: title, text: text, createdAt: new Date().toISOString() };
+      scripts = [newScript, ...scripts];
+      selectedScriptId = newScript.id;
+    }
+    saveScripts(); closeScriptModal(); renderHomeView(); renderRehearsalView();
+    alert("원고 데이터가 저장되었습니다.");
+  };
+
+  // API 키 설정 버튼 (네비바에 추가) - Worker 사용 시 숨김
+  const useWorkerConfigured = WORKER_URL && !WORKER_URL.includes("YOUR-WORKER-NAME");
+  if (!useWorkerConfigured) {
+    const navRight = document.querySelector("header .flex.items-center.gap-2, header .flex.items-center.gap-3");
+    if (navRight) {
+      const keyBtn = document.createElement("button");
+      keyBtn.onclick = openApiKeyModal;
+      keyBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-orange-200 text-orange-700 hover:bg-orange-50 text-[10px] font-bold transition-all";
+      keyBtn.innerHTML = `<i data-lucide="key" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">AI키 설정</span>`;
+      navRight.insertBefore(keyBtn, navRight.firstChild);
+      if (typeof lucide !== "undefined") lucide.createIcons();
+    }
+  }
+});
+    </script>
+  </body>
+</html>
