@@ -1752,11 +1752,14 @@ window.startRehearsal = async function() {
       recognition.lang = "ko-KR";
 
       recognition.onstart = () => {
-        if (statusText) statusText.innerText = "🎙️ 음성 인식 중 — 마이크에 또박또박 말씀해 주세요";
+        console.log("[말결 디버그] SpeechRecognition 시작됨");
+        if (statusText) statusText.innerText = "🎙️ 음성 인식 중 [시작됨] — 마이크에 또박또박 말씀해 주세요";
         if (statusBadge) statusBadge.className = "inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/50";
       };
 
       recognition.onerror = (e) => {
+        console.warn("[말결 디버그] SpeechRecognition 오류:", e.error);
+        if (statusText) statusText.dataset.lastError = e.error;
         if (e.error === "not-allowed" || e.error === "service-not-allowed" || e.error === "security") {
           if (statusText) statusText.innerHTML = `<span class="text-rose-700 font-bold">⚠️ 마이크 권한 필요:</span> 주소창의 마이크 권한을 허용하거나 Chrome 브라우저에서 열어주세요.`;
           if (statusBadge) {
@@ -1787,18 +1790,31 @@ window.startRehearsal = async function() {
         }
       };
 
+      let resultCallCount = 0;
       recognition.onresult = (event) => {
+        resultCallCount++;
+        console.log("[말결 디버그] onresult 호출됨, results 개수:", event.results.length);
         let interimTranscript = "";
         let finalTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
           else interimTranscript += event.results[i][0].transcript;
         }
+        console.log("[말결 디버그] final:", finalTranscript, "/ interim:", interimTranscript);
         if (finalTranscript) spokenText += " " + finalTranscript;
         const currentDisplay = (spokenText + " " + interimTranscript).trim();
-        if (sttBox && currentDisplay) sttBox.innerText = currentDisplay;
+        if (sttBox) {
+          sttBox.innerText = currentDisplay || `(인식 시도 ${resultCallCount}회, 텍스트 비어있음)`;
+        }
         updateRealtimeFeedback(activeScript.text, currentDisplay);
       };
+
+      // 5초 안에 onresult가 한 번도 안 불리면 화면에 표시
+      setTimeout(() => {
+        if (isRehearsing && resultCallCount === 0 && sttBox) {
+          sttBox.innerHTML = `<span class="text-rose-600 font-bold">⚠️ 디버그: 5초간 음성 인식 결과(onresult)가 한 번도 호출되지 않았습니다. 마이크에 소리가 들어가도 인식 엔진이 응답하지 않는 상태입니다.</span>`;
+        }
+      }, 5000);
 
       recognition.start();
     } catch (err) {
