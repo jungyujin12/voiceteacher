@@ -1745,21 +1745,26 @@ window.startRehearsal = async function() {
   if (SpeechRecognition) {
     let consecutiveRestarts = 0;
     let lastRestartTime = Date.now();
+    let resultCallCount = 0;
+
+    function createRecognition() {
+      const r = new SpeechRecognition();
+      r.continuous = true;
+      r.interimResults = true;
+      r.lang = "ko-KR";
+      r.maxAlternatives = 1;
+      return r;
+    }
+
     try {
-      recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = "ko-KR";
+      recognition = createRecognition();
 
       recognition.onstart = () => {
-        console.log("[말결 디버그] SpeechRecognition 시작됨");
-        if (statusText) statusText.innerText = "🎙️ 음성 인식 중 [시작됨] — 마이크에 또박또박 말씀해 주세요";
+        if (statusText) statusText.innerText = "🎙️ 음성 인식 중 — 마이크에 또박또박 말씀해 주세요";
         if (statusBadge) statusBadge.className = "inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/50";
       };
 
       recognition.onerror = (e) => {
-        console.warn("[말결 디버그] SpeechRecognition 오류:", e.error);
-        if (statusText) statusText.dataset.lastError = e.error;
         if (e.error === "not-allowed" || e.error === "service-not-allowed" || e.error === "security") {
           if (statusText) statusText.innerHTML = `<span class="text-rose-700 font-bold">⚠️ 마이크 권한 필요:</span> 주소창의 마이크 권한을 허용하거나 Chrome 브라우저에서 열어주세요.`;
           if (statusBadge) {
@@ -1767,54 +1772,72 @@ window.startRehearsal = async function() {
             statusBadge.innerHTML = `<i data-lucide="mic-off" class="w-3 h-3"></i> <span>마이크 승인 필요</span>`;
             if (typeof lucide !== "undefined") lucide.createIcons();
           }
-        } else {
-          if (statusText) statusText.innerText = `⚠️ 음성 인식 오류 (${e.error}) — Chrome에서 사용하시면 더 안정적입니다`;
+        } else if (e.error === "network") {
+          if (statusText) statusText.innerText = "⚠️ 네트워크 오류 — 음성 인식 서버에 연결하지 못했습니다. 잠시 후 자동 재시도합니다.";
+        } else if (e.error === "audio-capture") {
+          if (statusText) statusText.innerText = "⚠️ 마이크 캡처 실패 — 다른 앱이 마이크를 점유 중일 수 있습니다.";
+        } else if (e.error !== "aborted" && e.error !== "no-speech") {
+          if (statusText) statusText.innerText = `⚠️ 음성 인식 오류 (${e.error})`;
         }
       };
 
       recognition.onend = () => {
-        if (isRehearsing && recognition) {
-          const now = Date.now();
-          if (now - lastRestartTime < 1000) consecutiveRestarts++;
-          else consecutiveRestarts = 0;
-          lastRestartTime = now;
-          if (consecutiveRestarts > 5) {
-            if (statusText) statusText.innerText = "🔇 음성 인식이 중지되었습니다. 마이크 연결을 확인해 주세요.";
-            return;
-          }
-          setTimeout(() => {
-            if (isRehearsing && recognition) {
-              try { recognition.start(); } catch(err) {}
-            }
-          }, 500);
+        if (!isRehearsing) return;
+        const now = Date.now();
+        const elapsed = now - lastRestartTime;
+        if (elapsed < 800) consecutiveRestarts++;
+        else consecutiveRestarts = 0;
+        lastRestartTime = now;
+
+        if (consecutiveRestarts > 8) {
+          if (statusText) statusText.innerHTML = `⚠️ 음성 인식이 반복 실패하고 있습니다.<br><small>Chrome 설정 → 사이트 설정 → 마이크 권한을 확인하거나, 페이지를 새로고침 후 다시 시도해 주세요.</small>`;
+          return;
         }
+
+        // Android Chrome은 재시작 딜레이가 길어야 안정적
+        const delay = consecutiveRestarts > 3 ? 1500 : 600;
+        setTimeout(() => {
+          if (!isRehearsing) return;
+          try {
+            // 새 인스턴스로 재시작 (Android에서 더 안정적)
+            recognition = createRecognition();
+            recognition.onstart = arguments.callee._handlers?.onstart;
+            recognition.onerror = arguments.callee._handlers?.onerror;
+            recognition.onend = arguments.callee._handlers?.onend;
+            recognition.onresult = arguments.callee._handlers?.onresult;
+          } catch(e2) {}
+          try { recognition.start(); } catch(err) {}
+        }, delay);
       };
 
-      let resultCallCount = 0;
       recognition.onresult = (event) => {
         resultCallCount++;
-        console.log("[말결 디버그] onresult 호출됨, results 개수:", event.results.length);
         let interimTranscript = "";
         let finalTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
           else interimTranscript += event.results[i][0].transcript;
         }
-        console.log("[말결 디버그] final:", finalTranscript, "/ interim:", interimTranscript);
         if (finalTranscript) spokenText += " " + finalTranscript;
         const currentDisplay = (spokenText + " " + interimTranscript).trim();
-        if (sttBox) {
-          sttBox.innerText = currentDisplay || `(인식 시도 ${resultCallCount}회, 텍스트 비어있음)`;
-        }
+        if (sttBox && currentDisplay) sttBox.innerText = currentDisplay;
         updateRealtimeFeedback(activeScript.text, currentDisplay);
       };
 
-      // 5초 안에 onresult가 한 번도 안 불리면 화면에 표시
+      // 핸들러 참조 저장 (재시작 시 재사용)
+      recognition.onend._handlers = {
+        onstart: recognition.onstart,
+        onerror: recognition.onerror,
+        onend: recognition.onend,
+        onresult: recognition.onresult
+      };
+
+      // 8초 내 응답 없으면 안내 표시
       setTimeout(() => {
         if (isRehearsing && resultCallCount === 0 && sttBox) {
-          sttBox.innerHTML = `<span class="text-rose-600 font-bold">⚠️ 디버그: 5초간 음성 인식 결과(onresult)가 한 번도 호출되지 않았습니다. 마이크에 소리가 들어가도 인식 엔진이 응답하지 않는 상태입니다.</span>`;
+          sttBox.innerHTML = `목소리를 감지했지만 텍스트 변환이 되지 않고 있습니다.<br><small style="color:#888">소리가 너무 작거나, 인터넷 연결이 불안정할 수 있습니다. 또박또박 크게 말씀해 주세요.</small>`;
         }
-      }, 5000);
+      }, 8000);
 
       recognition.start();
     } catch (err) {
